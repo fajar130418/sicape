@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $this->renderSection('title') ?> - Dinas Perpustakaan dan Kearsipan Kabupaten Seruyan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #10b981;
+            --bg-color: #f3f4f6;
+            --sidebar-width: 260px;
+            --text-color: #1f2937;
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #ffffff;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.25rem;
+            margin: 0;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 1rem;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #4b5563;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: #eef2ff;
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu a i {
+            width: 24px;
+            margin-right: 12px;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .user-details h4 {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .user-details p {
+            margin: 0;
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            flex-grow: 1;
+            width: calc(100% - var(--sidebar-width));
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+        }
+
+        /* Card Style */
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #4338ca;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-content h3 {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .stat-content p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        th {
+            font-weight: 600;
+            color: #6b7280;
+            background-color: #f9fafb;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #b91c1c; }
+
+        /* Form System */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
+        }
+        
+        .col-span-12 { grid-column: span 12; }
+        .col-span-8 { grid-column: span 8; }
+        .col-span-6 { grid-column: span 6; }
+        .col-span-4 { grid-column: span 4; }
+        .col-span-3 { grid-column: span 3; }
+        .col-span-2 { grid-column: span 2; }
+
+        @media (max-width: 768px) {
+            .col-span-6, .col-span-4, .col-span-3, .col-span-2 {
+                grid-column: span 12;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem; /* Space between label and input */
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .text-danger {
+            color: #ef4444;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: 'Outfit', sans-serif;
+            color: #1f2937;
+            background-color: #fff;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            box-sizing: border-box; /* Ensures padding doesn't overflow width */
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #9ca3af;
+        }
+
+        select.form-control {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+            appearance: none;
+        }
+
+        input[type="file"].form-control {
+            padding: 0.4rem;
+        }
+
+        input[type="file"]::file-selector-button {
+            margin-right: 1rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 4px;
+            padding: 0.25rem 0.75rem;
+            color: #374151;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        input[type="file"]::file-selector-button:hover {
+            background: #e5e7eb;
+        }
+
+        .section-separator {
+            grid-column: span 12;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #111827;
+        }
+
+        .section-separator i {
+            color: var(--primary-color);
+            background: #e0e7ff;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .section-separator h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>Dispusip Seruyan</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="<?= base_url('dashboard') ?>" class="<?= uri_string() == 'dashboard' ? 'active' : '' ?>">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="<?= base_url('leave/create') ?>" class="<?= uri_string() == 'leave/create' ? 'active' : '' ?>">
+                    <i class="fas fa-plus-circle"></i> Ajukan Cuti
+                </a>
+            </li>
+             <li>
+                <a href="<?= base_url('leave/history') ?>" class="<?= uri_string() == 'leave/history' ? 'active' : '' ?>">
+                    <i class="fas fa-history"></i> Riwayat Cuti
+                </a>
+            </li>
+            <li>
+                <a href="<?= base_url('approval') ?>" class="<?= uri_string() == 'approval' ? 'active' : '' ?>">
+                    <i class="fas fa-check-circle"></i> Persetujuan Atasan
+                </a>
+            </li>
+            <?php if(session()->get('role') == 'admin'): ?>
+            <li>
+                <a href="<?= base_url('admin') ?>">
+                    <i class="fas fa-user-shield"></i> Admin Panel
+                </a>
+            </li>
+            <li>
+                <a href="<?= base_url('employee') ?>" class="<?= uri_string() == 'employee' ? 'active' : '' ?>">
+                    <i class="fas fa-users"></i> Manajemen Pegawai
+                </a>
+            </li>
+            <li>
+                <a href="<?= base_url('employee/supervisors') ?>" class="<?= uri_string() == 'employee/supervisors' ? 'active' : '' ?>">
+                    <i class="fas fa-user-tie"></i> Data Atasan
+                </a>
+            </li>
+            <li>
+                <a href="<?= base_url('employee/admins') ?>" class="<?= uri_string() == 'employee/admins' ? 'active' : '' ?>">
+                    <i class="fas fa-user-shield"></i> Data Administrator
+                </a>
+            </li>
+            <li>
+                <a href="<?= base_url('admin/holidays') ?>" class="<?= uri_string() == 'admin/holidays' ? 'active' : '' ?>">
+                    <i class="fas fa-calendar-times"></i> Manajemen Hari Libur
+                </a>
+            </li>
+            <?php endif; ?>
+        </ul>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <?= substr(session()->get('name'), 0, 1) ?>
+                </div>
+                <div class="user-details">
+                    <h4><?= session()->get('name') ?></h4>
+                    <p><?= session()->get('role') == 'admin' ? 'Administrator' : 'Pegawai ASN' ?></p>
+                </div>
+            </div>
+            <a href="<?= base_url('logout') ?>" class="btn btn-danger btn-sm" style="width: 100%; justify-content: center;">
+                <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <?= $this->renderSection('content') ?>
+    </main>
+</body>
+</html>
