@@ -59,7 +59,7 @@ Aplikasi manajemen cuti ASN berbasis web yang mendukung akumulasi cuti 18-24 har
    Akses aplikasi di: `http://localhost:8080`
 
 ## Akun Login Default (Admin)
-- **Username**: admin
+- **Username**: 199001012020011001
 - **Password**: admin123
 
 ## Catatan Penting
