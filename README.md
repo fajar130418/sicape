@@ -20,7 +20,7 @@ Aplikasi manajemen cuti ASN berbasis web yang mendukung akumulasi cuti 18-24 har
 
 1. **Clone Repository**
    ```bash
-   git clone https://github.com/username/repository-name.git
+   git clone https://github.com/fajar130418/e-cuti-asn.git
    cd cuti
    ```
 
