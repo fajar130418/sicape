@@ -33,7 +33,7 @@ class Leave extends BaseController
         // Determine User ID (Admin can select other users)
         $currentUserId = session()->get('id');
         $targetUserId = $currentUserId;
-        
+
         if (session()->get('role') == 'admin' && $request->getVar('target_user_id')) {
             $targetUserId = $request->getVar('target_user_id');
         }
@@ -44,7 +44,7 @@ class Leave extends BaseController
         $supervisorId = $targetUser['supervisor_id'];
 
         $userId = $targetUserId; // Use this for the rest of the logic
-        
+
         $rules = [
             'leave_type_id' => 'required',
             'start_date' => 'required|valid_date',
@@ -59,11 +59,11 @@ class Leave extends BaseController
 
         $startDate = $request->getVar('start_date');
         $endDate = $request->getVar('end_date');
-        
+
         // Calculate duration (Exclude Weekends & Holidays)
         $start = new \DateTime($startDate);
         $end = new \DateTime($endDate);
-        
+
         if ($start > $end) {
             return redirect()->back()->withInput()->with('errors', ['Tanggal selesai tidak boleh lebih awal dari tanggal mulai.']);
         }
@@ -93,7 +93,7 @@ class Leave extends BaseController
         }
 
         if ($duration < 1) {
-             return redirect()->back()->withInput()->with('errors', ['Durasi cuti valid adalah 0 hari (mungkin karena hari libur/akhir pekan).']);
+            return redirect()->back()->withInput()->with('errors', ['Durasi cuti valid adalah 0 hari (mungkin karena hari libur/akhir pekan).']);
         }
 
         // Specific Rules Validation
@@ -109,33 +109,33 @@ class Leave extends BaseController
 
             // Check if Cuti Besar already taken this year
             $bigLeaveTaken = $db->table('leave_requests')
-                                ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
-                                ->where('user_id', $userId)
-                                ->where('leave_types.name', 'Cuti Besar')
-                                ->where('status', 'approved')
-                                ->where('YEAR(start_date)', date('Y'))
-                                ->countAllResults();
-            
+                ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+                ->where('user_id', $userId)
+                ->where('leave_types.name', 'Cuti Besar')
+                ->where('status', 'approved')
+                ->where('YEAR(start_date)', date('Y'))
+                ->countAllResults();
+
             if ($bigLeaveTaken > 0) {
                 return redirect()->back()->withInput()->with('errors', ['Anda tidak dapat mengambil Cuti Tahunan karena sudah mengambil Cuti Besar tahun ini.']);
             }
-            
+
             // Check Balance using cumulative FIFO logic (N, N-1, N-2)
             $builder = $db->table('leave_requests');
             $builder->select('SUM(duration) as used_days', false);
             $builder->join('leave_types', 'leave_types.id = leave_requests.leave_type_id');
             $builder->where('user_id', $userId);
             $builder->where('leave_types.name', 'Cuti Tahunan');
-            $builder->whereIn('status', ['approved', 'pending']); 
+            $builder->whereIn('status', ['approved', 'pending']);
             $builder->where('YEAR(start_date)', date('Y'));
             $query = $builder->get();
             $result = $query->getRow();
-            $usedInSystem = (int)($result->used_days ?? 0);
+            $usedInSystem = (int) ($result->used_days ?? 0);
 
             // Get Total Initial Quota (N + N-1 + N-2) with ASN constraints
-            $initialN  = (int)($targetUser['leave_balance_n'] ?? 12);
-            $initialN1 = min((int)($targetUser['leave_balance_n1'] ?? 0), 6);
-            $initialN2 = min((int)($targetUser['leave_balance_n2'] ?? 0), 6);
+            $initialN = (int) ($targetUser['leave_balance_n'] ?? 12);
+            $initialN1 = min((int) ($targetUser['leave_balance_n1'] ?? 0), 6);
+            $initialN2 = min((int) ($targetUser['leave_balance_n2'] ?? 0), 6);
             $totalQuota = $initialN + $initialN1 + $initialN2;
 
             $remainingTotal = max(0, $totalQuota - $usedInSystem);
@@ -150,7 +150,7 @@ class Leave extends BaseController
             if ($yearsOfService < 5) {
                 return redirect()->back()->withInput()->with('errors', ['Anda belum berhak mengambil Cuti Besar (Masa kerja < 5 tahun).']);
             }
-            
+
             // Check if Annual Leave taken this year - STRICTLY SPEAKING, usually taking Big Leave forfeits Annual Leave rights.
             // If they already took Annual Leave, can they take Big Leave? Usually yes, but they lose remaining. 
             // But if the rule says "tidak berhak lagi", it implies if you take Big Leave, you can't take Annual.
@@ -161,11 +161,22 @@ class Leave extends BaseController
 
         // 3. Max Duration Check
         if ($duration > $leaveType['max_duration']) {
-             return redirect()->back()->withInput()->with('errors', ["Durasi cuti melebihi batas maksimal ({$leaveType['max_duration']} hari)."]);
+            return redirect()->back()->withInput()->with('errors', ["Durasi cuti melebihi batas maksimal ({$leaveType['max_duration']} hari)."]);
         }
 
-        // 4. File Requirement
-        if ($leaveType['requires_file'] == 1) {
+        // 4. File Requirement & CAP Specific Logic
+        if ($leaveType['name'] == 'Cuti Alasan Penting') {
+            $capCategory = $request->getVar('reason');
+            $requiresAttachment = in_array($capCategory, [
+                'Keluarga Inti Sakit Keras',
+                'Musibah Bencana',
+                'Faktor Kejiwaan'
+            ]);
+
+            if ($requiresAttachment) {
+                $rules['attachment'] = 'uploaded[attachment]|max_size[attachment,2048]|ext_in[attachment,pdf,jpg,jpeg,png]';
+            }
+        } elseif ($leaveType['requires_file'] == 1) {
             $rules['attachment'] = 'uploaded[attachment]|max_size[attachment,2048]|ext_in[attachment,pdf,jpg,jpeg,png]';
         }
 
@@ -182,7 +193,7 @@ class Leave extends BaseController
         }
 
         $model = new \App\Models\LeaveRequestModel();
-        
+
         $data = [
             'user_id' => $userId,
             'leave_type_id' => $leaveTypeId,
@@ -206,34 +217,34 @@ class Leave extends BaseController
         $userId = session()->get('id');
         $requestModel = new \App\Models\LeaveRequestModel();
         $history = $requestModel->select('leave_requests.*, leave_types.name as type_name, users.is_head_of_agency as is_head_of_agency')
-                                ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
-                                ->join('users', 'users.id = leave_requests.user_id')
-                                ->where('leave_requests.user_id', $userId)
-                                ->orderBy('leave_requests.created_at', 'DESC')
-                                ->findAll();
-        
+            ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+            ->join('users', 'users.id = leave_requests.user_id')
+            ->where('leave_requests.user_id', $userId)
+            ->orderBy('leave_requests.created_at', 'DESC')
+            ->findAll();
+
         $userModel = new \App\Models\UserModel();
         $remainingLeave = $userModel->getRemainingLeave($userId);
-        
+
         $data = [
             'title' => 'Riwayat Cuti',
             'history' => $history,
             'remainingLeave' => $remainingLeave
         ];
-        
+
         return view('leave/history', $data);
     }
     public function print($id)
     {
         $userId = session()->get('id');
         $model = new \App\Models\LeaveRequestModel();
-        
+
         $request = $model->select('leave_requests.*, users.name as user_name, users.nip, users.unit, users.position, users.join_date, users.phone, users.is_head_of_agency, leave_types.name as type_name, s.name as supervisor_name, s.nip as supervisor_nip')
-                         ->join('users', 'users.id = leave_requests.user_id')
-                         ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
-                         ->join('users s', 's.id = leave_requests.supervisor_id', 'left')
-                         ->where('leave_requests.id', $id)
-                         ->first();
+            ->join('users', 'users.id = leave_requests.user_id')
+            ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+            ->join('users s', 's.id = leave_requests.supervisor_id', 'left')
+            ->where('leave_requests.id', $id)
+            ->first();
 
         // Security check: Only own request or admin/supervisor can view
         if (!$request) {
@@ -248,7 +259,7 @@ class Leave extends BaseController
         $isAdmin = session()->get('role') == 'admin';
 
         if (!$isOwner && !$isSupervisor && !$isAdmin) {
-             return redirect()->back()->with('error', 'Akses ditolak.');
+            return redirect()->back()->with('error', 'Akses ditolak.');
         }
 
         // Only allow download if approved OR if user is Head of Agency (bypass approval)
@@ -265,7 +276,7 @@ class Leave extends BaseController
         $today = new \DateTime();
         $diff = $joinDate->diff($today);
         $tenure = $diff->y . " Tahun " . $diff->m . " Bulan";
-        
+
         // Fetch Head of Agency
         $headOfAgency = $model->db->table('users')->where('is_head_of_agency', 1)->get()->getRowArray();
 
@@ -273,8 +284,8 @@ class Leave extends BaseController
         $manualSignature = null;
 
         if (strtolower($this->request->getMethod()) === 'post') {
-             // Retrieve manual signature data if posted
-             $manualSignature = [
+            // Retrieve manual signature data if posted
+            $manualSignature = [
                 'supervisor' => [
                     'name' => $this->request->getPost('supervisor_sign_name'),
                     'nip' => $this->request->getPost('supervisor_sign_nip'),
