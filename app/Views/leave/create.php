@@ -147,6 +147,17 @@
         </select>
     `;
 
+    const cltnCategories = `
+        <select name="category" id="category" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Outfit', sans-serif; box-sizing: border-box;">
+            <option value="">-- Pilih Kategori CLTN --</option>
+            <option value="Mengikuti Suami/Istri Tugas Negara/Belajar">Mengikuti Suami/Istri Tugas Negara/Belajar</option>
+            <option value="Mendampingi Anak Butuh Perhatian Khusus">Mendampingi Anak Butuh Perhatian Khusus</option>
+            <option value="Mendampingi Suami/Istri/Orang Tua Sakit Parah/Menua">Mendampingi Suami/Istri/Orang Tua Sakit Parah/Menua</option>
+            <option value="Persalinan Anak ke-4 dan Seterusnya (Tanpa Jatah Cuti Besar)">Persalinan Anak ke-4 dan Seterusnya (Tanpa Jatah Cuti Besar)</option>
+            <option value="Alasan Pribadi yang Sangat Penting & Mendesak">Alasan Pribadi yang Sangat Penting & Mendesak</option>
+        </select>
+    `;
+
     const defaultReason = `
         <textarea name="reason" id="reason" rows="4" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Outfit', sans-serif; box-sizing: border-box;"></textarea>
     `;
@@ -305,6 +316,33 @@
             startDateInput.addEventListener('change', updateMaternityHint);
             endDateInput.addEventListener('change', updateMaternityHint);
             updateMaternityHint();
+        } else if (typeName === 'Cuti di Luar Tanggungan Negara') {
+            categoryContainer.style.display = 'block';
+            categoryContainer.innerHTML = cltnCategories;
+
+            // Hide manual reason and replace with hidden sync
+            reasonContainer.innerHTML = '<input type="hidden" name="reason" id="reason_hidden">';
+            const reasonHidden = document.getElementById('reason_hidden');
+
+            const updateCltnHint = () => {
+                const categorySelect = document.getElementById('category');
+                const category = categorySelect.value;
+                reasonHidden.value = category ? 'CLTN - ' + category : 'CLTN';
+
+                let hint = '<div style="background: #fff1f2; border: 1px solid #fecaca; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">';
+                hint += '<span style="color: #e11d48; font-weight: 700; font-size: 1rem; display: block; margin-bottom: 0.5rem;">⚠️ KONSEKUENSI PENTING (Wajib Tahu):</span>';
+                hint += '<ul style="color: #9f1239; margin: 0; padding-left: 1.25rem; font-size: 0.95rem;">';
+                hint += '<li><strong>Penghasilan Berhenti:</strong> PNS tidak menerima gaji dan tunjangan apapun dari negara.</li>';
+                hint += '<li><strong>Masa Kerja Terhenti:</strong> Masa CLTN tidak dihitung sebagai masa kerja (Kenaikan Pangkat/Pensiun akan mundur).</li>';
+                hint += '<li><strong>Jabatan Lowong:</strong> PNS otomatis diberhentikan dari jabatannya.</li>';
+                hint += '<li><strong>Syarat 5 Tahun:</strong> Harus sudah bekerja minimal 5 tahun terus-menerus sebagai PNS.</li>';
+                hint += '</ul></div>';
+
+                document.getElementById('reason_hint').innerHTML = hint;
+            };
+
+            document.getElementById('category').addEventListener('change', updateCltnHint);
+            updateCltnHint();
         }
     });
 

@@ -249,6 +249,28 @@ class Leave extends BaseController
             $leaveType['max_duration'] = 999;
         }
 
+        // 5. CLTN Rules
+        if ($leaveType['name'] == 'Cuti di Luar Tanggungan Negara') {
+            // Only PNS can apply for CLTN
+            if ($user['user_type'] != 'PNS') {
+                return redirect()->back()->withInput()->with('errors', ['Cuti di Luar Tanggungan Negara (CLTN) hanya dapat diajukan oleh pegawai berstatus PNS.']);
+            }
+
+            // Must have worked for at least 5 years
+            $workingYears = date_diff(date_create($user['tmt_pns']), date_create('today'))->y;
+            if ($workingYears < 5) {
+                return redirect()->back()->withInput()->with('errors', ['Syarat pengajuan CLTN adalah masa kerja minimal 5 tahun terus-menerus sebagai PNS.']);
+            }
+
+            // Durasi Maksimal 3 Tahun (1095 Hari)
+            if ($duration > 1095) {
+                return redirect()->back()->withInput()->with('errors', ['Maksimal durasi CLTN adalah 3 tahun (1095 hari).']);
+            }
+
+            // Bypass max_duration DB
+            $leaveType['max_duration'] = 9999;
+        }
+
         // 3. Max Duration Check
         if ($duration > $leaveType['max_duration']) {
             return redirect()->back()->withInput()->with('errors', ["Durasi cuti melebihi batas maksimal ({$leaveType['max_duration']} hari)."]);
