@@ -200,11 +200,15 @@
 
             categorySelect.addEventListener('change', function () {
                 reasonHidden.value = this.value;
+                let hint = '<span style="color: #ef4444; font-weight: 600;">PENTING:</span> Mengambil Cuti Besar akan <strong>menghapus jatah Cuti Tahunan</strong> Anda di tahun berjalan.<br><span style="color: #ef4444; font-weight: 600;">SISA HAK HAPUS:</span> Jika diambil kurang dari 3 bulan, sisa jatah di siklus ini akan hangus.';
+
                 if (this.value === 'Ibadah Keagamaan (Haji Pertama)') {
-                    document.getElementById('reason_hint').innerHTML = '<span style="color: #ef4444; font-weight: 600;">PENTING:</span> Mengambil Cuti Besar akan <strong>menghapus jatah Cuti Tahunan</strong> Anda di tahun berjalan.<br><span style="color: #ef4444; font-weight: 600;">SISA HAK HAPUS:</span> Jika diambil kurang dari 3 bulan, sisa jatah di siklus ini akan hangus.<br><span style="color: #059669;">* Pengecualian masa kerja 5 tahun berlaku untuk Haji Pertama.</span>';
-                } else {
-                    document.getElementById('reason_hint').innerHTML = '<span style="color: #ef4444; font-weight: 600;">PENTING:</span> Mengambil Cuti Besar akan <strong>menghapus jatah Cuti Tahunan</strong> Anda di tahun berjalan.<br><span style="color: #ef4444; font-weight: 600;">SISA HAK HAPUS:</span> Jika diambil kurang dari 3 bulan, sisa jatah di siklus ini akan hangus.';
+                    hint += '<br><span style="color: #059669;">* Pengecualian masa kerja 5 tahun berlaku untuk Haji Pertama.</span>';
+                } else if (this.value === 'Persalinan Anak ke-4 dan seterusnya') {
+                    hint += '<br><span style="color: #059669; font-weight: 600;">TIPS:</span> Jika Anda belum berhak atas Cuti Besar (misal: masa kerja < 5 th), maka pengajuan persalinan anak ke-4+ diarahkan menggunakan <strong>Cuti di Luar Tanggungan Negara (CLTN)</strong>.';
                 }
+
+                document.getElementById('reason_hint').innerHTML = hint;
             });
         } else if (typeName === 'Cuti Sakit') {
             categoryContainer.style.display = 'block';
@@ -267,20 +271,20 @@
             // Hide manual reason and replace with hidden sync
             reasonContainer.innerHTML = '<input type="hidden" name="reason" id="reason_hidden">';
             const reasonHidden = document.getElementById('reason_hidden');
-            
+
             const updateMaternityHint = () => {
                 const categorySelect = document.getElementById('category');
                 const category = categorySelect.value;
                 reasonHidden.value = category ? 'Cuti Melahirkan - ' + category : 'Cuti Melahirkan';
 
                 let hint = '<span style="color: #059669; font-weight: 600;">INFO:</span> Cuti diambil selama 3 bulan kalender (termasuk hari libur).';
-                
+
                 if (category === 'Anak ke-4 atau lebih') {
-                    hint = '<span style="color: #ef4444; font-weight: 600;">PERHATIAN:</span> Sesuai Peraturan BKN, Cuti Melahirkan hanya diberikan s.d anak ke-3. Untuk anak ke-4+, silakan ajukan **Cuti Besar**.';
+                    hint = '<span style="color: #ef4444; font-weight: 600;">PERHATIAN:</span> Sesuai Peraturan BKN, Cuti Melahirkan hanya diberikan s.d anak ke-3. Untuk anak ke-4+, silakan ajukan <strong>Cuti Besar</strong>. Jika jatah Cuti Besar tidak tersedia, pegawai diarahkan menggunakan <strong>CLTN</strong>.';
                 } else if (startDateInput.value && endDateInput.value) {
                     const start = new Date(startDateInput.value);
                     const end = new Date(endDateInput.value);
-                    
+
                     // 3 Months check
                     const maxEnd = new Date(start);
                     maxEnd.setMonth(maxEnd.getMonth() + 3);
@@ -288,7 +292,7 @@
 
                     hint = '<span style="color: #059669; font-weight: 600;">INFO:</span> Berdasarkan Peraturan BKN, cuti ini diambil total selama 3 bulan kalender.';
                     hint += '<br><span style="color: #6b7280;">Saran: Sebaiknya diajukan H-2 minggu atau 1 bulan sebelum HPL.</span>';
-                    
+
                     if (end > maxEnd) {
                         hint += `<br><span style="color: #ef4444; font-weight: 600;">PERINGATAN:</span> Durasi melebihi 3 bulan kalender (Batas: ${maxEnd.toLocaleDateString('id-ID')}).`;
                     }
