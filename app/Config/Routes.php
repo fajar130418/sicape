@@ -37,3 +37,9 @@ $routes->get('/admin/holidays/delete/(:num)', 'Holiday::delete/$1', ['filter' =>
 // Supervisor Approval Routes
 $routes->get('/approval', 'Approval::index', ['filter' => 'auth']);
 $routes->post('/approval/process/(:num)/(:segment)', 'Approval::process/$1/$2', ['filter' => 'auth']);
+
+// Report Routes
+$routes->get('/report', 'Report::index', ['filter' => 'auth']);
+$routes->get('/report/recap', 'Report::recap', ['filter' => 'auth']);
+$routes->get('/report/details', 'Report::details', ['filter' => 'auth']);
+$routes->get('/report/quota', 'Report::quota', ['filter' => 'auth']);

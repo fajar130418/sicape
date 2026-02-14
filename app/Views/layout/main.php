@@ -532,6 +532,11 @@
                         <i class="fas fa-calendar-times"></i> Manajemen Hari Libur
                     </a>
                 </li>
+                <li>
+                    <a href="<?= base_url('report') ?>" class="<?= strpos(uri_string(), 'report') === 0 ? 'active' : '' ?>">
+                        <i class="fas fa-file-invoice"></i> Laporan
+                    </a>
+                </li>
             <?php endif; ?>
         </ul>
         <div class="sidebar-footer">
