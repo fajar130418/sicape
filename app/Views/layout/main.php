@@ -86,6 +86,7 @@
             padding: 1rem;
             margin: 0;
             flex-grow: 1;
+            overflow-y: auto;
         }
 
         .sidebar-menu li {

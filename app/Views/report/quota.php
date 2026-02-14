@@ -35,7 +35,7 @@
                 <?php
                 $no = 1;
                 foreach ($users as $user):
-                    $totalQuota = $user['quota_n'] + $user['quota_n_1'] + $user['quota_n_2'];
+                    $totalQuota = $user['leave_balance_n'] + $user['leave_balance_n1'] + $user['leave_balance_n2'];
                     ?>
                     <tr>
                         <td>
@@ -49,21 +49,24 @@
                                 <?= $user['nip'] ?>
                             </div>
                         </td>
-                        <td style="text-align: center; color: <?= $user['quota_n_2'] > 0 ? '#b91c1c' : '#9ca3af' ?>;">
-                            <?= $user['quota_n_2'] ?>
+                        <td
+                            style="text-align: center; color: <?= $user['leave_balance_n2'] > 0 ? '#b91c1c' : '#9ca3af' ?>;">
+                            <?= $user['leave_balance_n2'] ?>
                         </td>
-                        <td style="text-align: center; color: <?= $user['quota_n_1'] > 0 ? '#92400e' : '#9ca3af' ?>;">
-                            <?= $user['quota_n_1'] ?>
+                        <td
+                            style="text-align: center; color: <?= $user['leave_balance_n1'] > 0 ? '#92400e' : '#9ca3af' ?>;">
+                            <?= $user['leave_balance_n1'] ?>
                         </td>
-                        <td style="text-align: center; color: <?= $user['quota_n'] > 0 ? '#065f46' : '#9ca3af' ?>;">
-                            <?= $user['quota_n'] ?>
+                        <td style="text-align: center; color: <?= $user['leave_balance_n'] > 0 ? '#065f46' : '#9ca3af' ?>;">
+                            <?= $user['leave_balance_n'] ?>
                         </td>
                         <td style="text-align: center; background: #f9fafb; font-weight: 700; color: var(--primary-color);">
                             <?= $totalQuota ?> hari
                         </td>
                         <td style="text-align: center;">
                             <?php
-                            $workingYears = date_diff(date_create($user['tmt_pns']), date_create('today'))->y;
+                            $joinDate = $user['join_date'] ?? date('Y-m-d');
+                            $workingYears = date_diff(date_create($joinDate), date_create('today'))->y;
                             if ($user['user_type'] == 'PNS' && $workingYears >= 5): ?>
                                 <span class="badge badge-success">Berhak</span>
                             <?php else: ?>

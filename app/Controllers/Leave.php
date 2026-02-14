@@ -257,7 +257,8 @@ class Leave extends BaseController
             }
 
             // Must have worked for at least 5 years
-            $workingYears = date_diff(date_create($user['tmt_pns']), date_create('today'))->y;
+            $joinDate = $user['join_date'] ?? date('Y-m-d');
+            $workingYears = date_diff(date_create($joinDate), date_create('today'))->y;
             if ($workingYears < 5) {
                 return redirect()->back()->withInput()->with('errors', ['Syarat pengajuan CLTN adalah masa kerja minimal 5 tahun terus-menerus sebagai PNS.']);
             }
