@@ -252,6 +252,55 @@
             startDateInput.addEventListener('change', updateSickHint);
             endDateInput.addEventListener('change', updateSickHint);
             updateSickHint();
+        } else if (typeName === 'Cuti Melahirkan') {
+            categoryContainer.style.display = 'block';
+            categoryContainer.innerHTML = `
+                <select name="category" id="category" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Outfit', sans-serif; box-sizing: border-box;">
+                    <option value="">-- Pilih Urutan Kelahiran --</option>
+                    <option value="Anak ke-1">Anak ke-1</option>
+                    <option value="Anak ke-2">Anak ke-2</option>
+                    <option value="Anak ke-3">Anak ke-3</option>
+                    <option value="Anak ke-4 atau lebih">Anak ke-4 atau lebih (Berpindah ke Cuti Besar)</option>
+                </select>
+            `;
+
+            // Hide manual reason and replace with hidden sync
+            reasonContainer.innerHTML = '<input type="hidden" name="reason" id="reason_hidden">';
+            const reasonHidden = document.getElementById('reason_hidden');
+            
+            const updateMaternityHint = () => {
+                const categorySelect = document.getElementById('category');
+                const category = categorySelect.value;
+                reasonHidden.value = category ? 'Cuti Melahirkan - ' + category : 'Cuti Melahirkan';
+
+                let hint = '<span style="color: #059669; font-weight: 600;">INFO:</span> Cuti diambil selama 3 bulan kalender (termasuk hari libur).';
+                
+                if (category === 'Anak ke-4 atau lebih') {
+                    hint = '<span style="color: #ef4444; font-weight: 600;">PERHATIAN:</span> Sesuai Peraturan BKN, Cuti Melahirkan hanya diberikan s.d anak ke-3. Untuk anak ke-4+, silakan ajukan **Cuti Besar**.';
+                } else if (startDateInput.value && endDateInput.value) {
+                    const start = new Date(startDateInput.value);
+                    const end = new Date(endDateInput.value);
+                    
+                    // 3 Months check
+                    const maxEnd = new Date(start);
+                    maxEnd.setMonth(maxEnd.getMonth() + 3);
+                    maxEnd.setDate(maxEnd.getDate() - 1);
+
+                    hint = '<span style="color: #059669; font-weight: 600;">INFO:</span> Berdasarkan Peraturan BKN, cuti ini diambil total selama 3 bulan kalender.';
+                    hint += '<br><span style="color: #6b7280;">Saran: Sebaiknya diajukan H-2 minggu atau 1 bulan sebelum HPL.</span>';
+                    
+                    if (end > maxEnd) {
+                        hint += `<br><span style="color: #ef4444; font-weight: 600;">PERINGATAN:</span> Durasi melebihi 3 bulan kalender (Batas: ${maxEnd.toLocaleDateString('id-ID')}).`;
+                    }
+                }
+
+                document.getElementById('reason_hint').innerHTML = hint;
+            };
+
+            document.getElementById('category').addEventListener('change', updateMaternityHint);
+            startDateInput.addEventListener('change', updateMaternityHint);
+            endDateInput.addEventListener('change', updateMaternityHint);
+            updateMaternityHint();
         }
     });
 

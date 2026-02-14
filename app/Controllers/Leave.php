@@ -72,21 +72,24 @@ class Leave extends BaseController
         $holidayModel = new \App\Models\HolidayModel();
         $holidays = $holidayModel->findColumn('date') ?? []; // Get array of holiday dates
 
+        $isCalendarDuration = in_array($leaveType['name'], ['Cuti Besar', 'Cuti Sakit', 'Cuti Melahirkan', 'Cuti di Luar Tanggungan Negara']);
         $duration = 0;
-        $period = new \DatePeriod($start, new \DateInterval('P1D'), $end->modify('+1 day'));
+        $period = new \DatePeriod($start, new \DateInterval('P1D'), (clone $end)->modify('+1 day'));
 
         foreach ($period as $dt) {
             $currDate = $dt->format('Y-m-d');
             $dayOfWeek = $dt->format('N'); // 1 (Mon) - 7 (Sun)
 
-            // Skip Weekend (6=Sat, 7=Sun)
-            if ($dayOfWeek >= 6) {
-                continue;
-            }
+            if (!$isCalendarDuration) {
+                // Skip Weekend (6=Sat, 7=Sun) for non-calendar types (Annual, CAP)
+                if ($dayOfWeek >= 6) {
+                    continue;
+                }
 
-            // Skip Holiday
-            if (in_array($currDate, $holidays)) {
-                continue;
+                // Skip Holiday
+                if (in_array($currDate, $holidays)) {
+                    continue;
+                }
             }
 
             $duration++;
@@ -212,6 +215,38 @@ class Leave extends BaseController
                 // Bypass max_duration check below by setting it high
                 $leaveType['max_duration'] = 9999;
             }
+        }
+
+        // 4. Cuti Melahirkan Rules
+        if ($leaveType['name'] == 'Cuti Melahirkan') {
+            $maternityCategory = $request->getVar('category');
+
+            // 4th Child Rule
+            if ($maternityCategory == 'Anak ke-4 atau lebih') {
+                return redirect()->back()->withInput()->with('errors', ['Cuti Melahirkan hanya diberikan s.d kelahiran anak ke-3. Untuk kelahiran anak ke-4 dan seterusnya, silakan gunakan jenis Cuti Besar.']);
+            }
+
+            // Duplicate Birth Order Check
+            $fullReason = 'Cuti Melahirkan - ' . $maternityCategory;
+            $duplicateCheck = $db->table('leave_requests')
+                ->where('user_id', $userId)
+                ->where('reason', $fullReason)
+                ->whereIn('status', ['approved', 'pending'])
+                ->countAllResults();
+
+            if ($duplicateCheck > 0) {
+                return redirect()->back()->withInput()->with('errors', ['Anda sudah pernah mengajukan Cuti Melahirkan untuk ' . $maternityCategory . '. Silakan pilih urutan kelahiran yang benar.']);
+            }
+
+            $maxEnd = clone $start;
+            $maxEnd->modify('+3 months')->modify('-1 day');
+
+            if ($end > $maxEnd) {
+                return redirect()->back()->withInput()->with('errors', ['Maksimal durasi Cuti Melahirkan adalah 3 bulan kalender (Batas: ' . $maxEnd->format('d/m/Y') . ').']);
+            }
+
+            // Bypass fixed max_duration if it exists in db, as we use 3 months logic
+            $leaveType['max_duration'] = 999;
         }
 
         // 3. Max Duration Check
