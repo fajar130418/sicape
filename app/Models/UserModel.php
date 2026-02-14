@@ -33,6 +33,7 @@ class UserModel extends Model
         'education',
         'nik',
         'photo',
+        'user_type',
         'is_supervisor',
         'is_head_of_agency',
         'leave_balance_n',

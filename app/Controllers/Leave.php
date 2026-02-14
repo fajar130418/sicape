@@ -147,16 +147,43 @@ class Leave extends BaseController
 
         // 2. Cuti Besar Rules
         if ($leaveType['name'] == 'Cuti Besar') {
-            if ($yearsOfService < 5) {
-                return redirect()->back()->withInput()->with('errors', ['Anda belum berhak mengambil Cuti Besar (Masa kerja < 5 tahun).']);
+            // Check User Type
+            $userType = $targetUser['user_type'] ?? 'PNS';
+            if ($userType !== 'PNS') {
+                return redirect()->back()->withInput()->with('errors', ['Cuti Besar hanya diperuntukkan bagi PNS. PPPK dan PPPK Paruh Waktu tidak berhak mengajukan Cuti Besar.']);
             }
 
-            // Check if Annual Leave taken this year - STRICTLY SPEAKING, usually taking Big Leave forfeits Annual Leave rights.
-            // If they already took Annual Leave, can they take Big Leave? Usually yes, but they lose remaining. 
-            // But if the rule says "tidak berhak lagi", it implies if you take Big Leave, you can't take Annual.
-            // Let's just warn or allow? Requirement: "ASN yang mengambil cuti besar tidak berhak lagi atas cuti tahunan di tahun yang sama."
-            // This usually means --> If Big Leave Approved -> Annual Leave Balance = 0.
-            // But checking here just to be safe if they try to be cheeky.
+            $leaveCategory = $request->getVar('category');
+
+            // Haji Exception: PNS yang belum mencapai 5 tahun boleh mengambil cuti besar untuk ibadah keagamaan (Haji Pertama).
+            $isHaji = ($leaveCategory == 'Ibadah Keagamaan (Haji Pertama)');
+
+            if ($yearsOfService < 5 && !$isHaji) {
+                return redirect()->back()->withInput()->with('errors', ['Anda belum berhak mengambil Cuti Besar (Masa kerja < 5 tahun). Kecuali untuk Ibadah Keagamaan (Haji Pertama).']);
+            }
+
+            // Milestone-based Forfeiture Check: 
+            // Once taken in a 5-year period, the "sisa hak" (remaining balance) for that period is forfeited.
+            $milestoneIndex = floor($yearsOfService / 5);
+            $lastMilestoneYears = $milestoneIndex * 5;
+            $milestoneDate = clone $joinDateObj;
+            $milestoneDate->modify("+$lastMilestoneYears years");
+
+            $previousBigLeave = $db->table('leave_requests')
+                ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+                ->where('user_id', $userId)
+                ->where('leave_types.name', 'Cuti Besar')
+                ->whereIn('status', ['approved', 'pending'])
+                ->where('start_date >=', $milestoneDate->format('Y-m-d'))
+                ->countAllResults();
+
+            if ($previousBigLeave > 0) {
+                return redirect()->back()->withInput()->with('errors', ['Anda sudah pernah mengambil Cuti Besar dalam siklus 5 tahun ini (Milestone: ' . $milestoneDate->format('d/m/Y') . '). Sesuai regulasi, sisa jatah hak Cuti Besar Anda di siklus ini dianggap hangus.']);
+            }
+
+            // Special Rule: ASN yang mengambil cuti besar tidak berhak lagi atas cuti tahunan di tahun yang sama.
+            // Reset Annual Leave Balance for this year
+            $userModel->update($userId, ['leave_balance_n' => 0]);
         }
 
         // 3. Max Duration Check
@@ -201,6 +228,7 @@ class Leave extends BaseController
             'end_date' => $request->getVar('end_date'),
             'duration' => $duration,
             'reason' => $request->getVar('reason'),
+            'category' => $request->getVar('category'),
             'address_during_leave' => $request->getVar('address_during_leave'),
             'attachment' => $fileName,
             'status' => 'pending',

@@ -17,11 +17,11 @@ class Employee extends BaseController
             'title' => 'Manajemen Pegawai',
             'employees' => $userModel->where('role', 'pegawai')->findAll()
         ];
-        
+
         foreach ($data['employees'] as &$emp) {
             $emp['remaining_leave'] = $userModel->getRemainingLeave($emp['id']);
         }
-        
+
         return view('employee/index', $data);
     }
 
@@ -30,15 +30,15 @@ class Employee extends BaseController
         if (session()->get('role') !== 'admin') {
             return redirect()->to('/dashboard');
         }
-        
+
         $userModel = new \App\Models\UserModel();
         $data = [
             'title' => 'Tambah Pegawai',
             'potential_supervisors' => $userModel->groupStart()
-                                                 ->where('role', 'admin')
-                                                 ->orWhere('is_supervisor', 1)
-                                                 ->groupEnd()
-                                                 ->findAll()
+                ->where('role', 'admin')
+                ->orWhere('is_supervisor', 1)
+                ->groupEnd()
+                ->findAll()
         ];
         return view('employee/create', $data);
     }
@@ -90,6 +90,7 @@ class Employee extends BaseController
             'address' => $this->request->getVar('address'),
             'password' => password_hash($this->request->getVar('password'), PASSWORD_DEFAULT),
             'role' => $this->request->getVar('role') ?: 'pegawai',
+            'user_type' => $this->request->getVar('user_type') ?: 'PNS',
             'join_date' => $this->request->getVar('join_date'),
             'position' => $this->request->getVar('position'),
             'unit' => $this->request->getVar('unit'),
@@ -125,11 +126,11 @@ class Employee extends BaseController
             'title' => 'Edit Pegawai',
             'employee' => $employee,
             'potential_supervisors' => $userModel->where('id !=', $id)
-                                                 ->groupStart()
-                                                 ->where('role', 'admin')
-                                                 ->orWhere('is_supervisor', 1)
-                                                 ->groupEnd()
-                                                 ->findAll()
+                ->groupStart()
+                ->where('role', 'admin')
+                ->orWhere('is_supervisor', 1)
+                ->groupEnd()
+                ->findAll()
         ];
 
         return view('employee/edit', $data);
@@ -145,7 +146,7 @@ class Employee extends BaseController
         $employee = $userModel->find($id);
 
         if (!$employee) {
-             return redirect()->back()->with('error', 'Pegawai tidak ditemukan');
+            return redirect()->back()->with('error', 'Pegawai tidak ditemukan');
         }
 
         $rules = [
@@ -161,10 +162,10 @@ class Employee extends BaseController
 
         // Only validate NIP/NIK uniqueness if it changed
         if ($employee['nip'] != $this->request->getVar('nip')) {
-             $rules['nip'] = 'required|is_unique[users.nip]';
+            $rules['nip'] = 'required|is_unique[users.nip]';
         }
         if ($employee['nik'] != $this->request->getVar('nik')) {
-             $rules['nik'] = 'required|is_unique[users.nik]';
+            $rules['nik'] = 'required|is_unique[users.nik]';
         }
 
         if (!$this->validate($rules)) {
@@ -194,6 +195,7 @@ class Employee extends BaseController
             'education' => $this->request->getVar('education'),
             'address' => $this->request->getVar('address'),
             'role' => $this->request->getVar('role') ?: 'pegawai',
+            'user_type' => $this->request->getVar('user_type') ?: 'PNS',
             'join_date' => $this->request->getVar('join_date'),
             'position' => $this->request->getVar('position'),
             'unit' => $this->request->getVar('unit'),
@@ -249,12 +251,12 @@ class Employee extends BaseController
     public function delete($id)
     {
         if (session()->get('role') !== 'admin') {
-             return redirect()->to('/dashboard');
+            return redirect()->to('/dashboard');
         }
-        
+
         $userModel = new \App\Models\UserModel();
         $userModel->delete($id);
-        
+
         return redirect()->to('/employee')->with('success', 'Pegawai berhasil dihapus.');
     }
 }

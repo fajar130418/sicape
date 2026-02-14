@@ -82,6 +82,9 @@
 
         <div style="margin-bottom: 1.5rem;">
             <label for="reason" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Alasan Cuti</label>
+            <div id="category_container" style="margin-bottom: 0.5rem; display: none;">
+                <!-- Category select will be injected here -->
+            </div>
             <div id="reason_container">
                 <textarea name="reason" id="reason" rows="4" required
                     style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Outfit', sans-serif; box-sizing: border-box;"></textarea>
@@ -112,6 +115,7 @@
 
 <script>
     const typeSelect = document.getElementById('leave_type_id');
+    const categoryContainer = document.getElementById('category_container');
     const reasonContainer = document.getElementById('reason_container');
     const fileContainer = document.getElementById('file_upload_container');
     const fileInput = document.getElementById('attachment');
@@ -129,6 +133,17 @@
             <option value="Istri Melahirkan/Operasi Caesar" data-req="0">Istri Melahirkan/Operasi Caesar (Opsional Lampiran)</option>
             <option value="Musibah Bencana" data-req="1">Musibah Bencana (Wajib Lampiran)</option>
             <option value="Faktor Kejiwaan" data-req="1">Faktor Kejiwaan (Wajib Lampiran)</option>
+        </select>
+    `;
+
+    const bigLeaveCategories = `
+        <select name="category" id="category" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Outfit', sans-serif; box-sizing: border-box;">
+            <option value="">-- Pilih Kategori Cuti Besar --</option>
+            <option value="Ibadah Keagamaan (Haji Pertama)">Ibadah Keagamaan (Haji Pertama)</option>
+            <option value="Ibadah Keagamaan (Umrah/Haji Lanjutan)">Ibadah Keagamaan (Umrah/Haji Lanjutan)</option>
+            <option value="Keperluan Keluarga (Sakit Keras/Pemulihan)">Keperluan Keluarga (Sakit Keras/Pemulihan)</option>
+            <option value="Persalinan Anak ke-4 dan seterusnya">Persalinan Anak ke-4 dan seterusnya</option>
+            <option value="Keperluan Pribadi Mendesak">Keperluan Pribadi Mendesak</option>
         </select>
     `;
 
@@ -150,6 +165,13 @@
         const typeName = selectedOption.text.split(' (')[0];
         const requiresFile = selectedOption.getAttribute('data-file');
 
+        // Reset state
+        categoryContainer.style.display = 'none';
+        categoryContainer.innerHTML = '';
+        reasonContainer.innerHTML = defaultReason;
+        document.getElementById('reason_hint').innerHTML = '';
+        handleFileUpload(requiresFile == '1');
+
         if (typeName === 'Cuti Alasan Penting') {
             reasonContainer.innerHTML = capOptions;
             handleFileUpload(false); // Reset file upload visibility
@@ -164,9 +186,26 @@
                 const req = opt.getAttribute('data-req') === '1';
                 handleFileUpload(req, true); // Always show for CAP, but toggle requirement
             });
-        } else {
-            reasonContainer.innerHTML = defaultReason;
-            handleFileUpload(requiresFile == '1');
+        } else if (typeName === 'Cuti Besar') {
+            categoryContainer.style.display = 'block';
+            categoryContainer.innerHTML = bigLeaveCategories;
+
+            // Hide manual reason and replace with hidden sync
+            reasonContainer.innerHTML = '<input type="hidden" name="reason" id="reason_hidden">';
+
+            document.getElementById('reason_hint').innerHTML = '<span style="color: #ef4444; font-weight: 600;">PENTING:</span> Mengambil Cuti Besar akan <strong>menghapus jatah Cuti Tahunan</strong> Anda di tahun berjalan.';
+
+            const categorySelect = document.getElementById('category');
+            const reasonHidden = document.getElementById('reason_hidden');
+
+            categorySelect.addEventListener('change', function () {
+                reasonHidden.value = this.value;
+                if (this.value === 'Ibadah Keagamaan (Haji Pertama)') {
+                    document.getElementById('reason_hint').innerHTML = '<span style="color: #ef4444; font-weight: 600;">PENTING:</span> Mengambil Cuti Besar akan <strong>menghapus jatah Cuti Tahunan</strong> Anda di tahun berjalan.<br><span style="color: #ef4444; font-weight: 600;">SISA HAK HAPUS:</span> Jika diambil kurang dari 3 bulan, sisa jatah di siklus ini akan hangus.<br><span style="color: #059669;">* Pengecualian masa kerja 5 tahun berlaku untuk Haji Pertama.</span>';
+                } else {
+                    document.getElementById('reason_hint').innerHTML = '<span style="color: #ef4444; font-weight: 600;">PENTING:</span> Mengambil Cuti Besar akan <strong>menghapus jatah Cuti Tahunan</strong> Anda di tahun berjalan.<br><span style="color: #ef4444; font-weight: 600;">SISA HAK HAPUS:</span> Jika diambil kurang dari 3 bulan, sisa jatah di siklus ini akan hangus.';
+                }
+            });
         }
     });
 
