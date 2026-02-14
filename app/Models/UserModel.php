@@ -34,6 +34,7 @@ class UserModel extends Model
         'nik',
         'photo',
         'user_type',
+        'contract_end_date',
         'is_supervisor',
         'is_head_of_agency',
         'leave_balance_n',

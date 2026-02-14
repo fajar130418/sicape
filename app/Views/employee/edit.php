@@ -173,15 +173,41 @@
 
             <div class="form-group col-span-6">
                 <label class="form-label">Status Pegawai <span class="text-danger">*</span></label>
-                <select name="user_type" class="form-control" required>
+                <select name="user_type" id="user_type" class="form-control" required>
                     <option value="PNS" <?= old('user_type', $employee['user_type']) == 'PNS' ? 'selected' : '' ?>>PNS
                     </option>
                     <option value="PPPK" <?= old('user_type', $employee['user_type']) == 'PPPK' ? 'selected' : '' ?>>PPPK
                     </option>
-                    <option value="PPPK Paruh Waktu" <?= old('user_type', $employee['user_type']) == 'PPPK Paruh Waktu' ? 'selected' : '' ?>>PPPK Paruh Waktu</option>
+                    <option value="PPPK Paruh Waktu" <?= old('user_type', $employee['user_type']) == 'PPPK Paruh Waktu' ? 'selected' : '' ?>>PPPK
+                        Paruh Waktu</option>
                 </select>
                 <div class="form-hint">Menentukan hak jenis cuti (Cuti Besar hanya untuk PNS).</div>
             </div>
+
+            <div class="form-group col-span-12" id="contract_field" style="display: none;">
+                <label class="form-label">Tanggal Berakhir Kontrak (Hanya untuk PPPK)</label>
+                <input type="date" name="contract_end_date" class="form-control"
+                    value="<?= old('contract_end_date', $employee['contract_end_date']) ?>">
+                <div class="form-hint">Diperlukan untuk validasi durasi Cuti Sakit PPPK.</div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const userTypeSelect = document.getElementById('user_type');
+                    const contractField = document.getElementById('contract_field');
+
+                    function toggleContractField() {
+                        if (userTypeSelect.value && userTypeSelect.value.includes('PPPK')) {
+                            contractField.style.display = 'block';
+                        } else {
+                            contractField.style.display = 'none';
+                        }
+                    }
+
+                    userTypeSelect.addEventListener('change', toggleContractField);
+                    toggleContractField(); // Initial check
+                });
+            </script>
 
             <!-- ROW 12: ATASAN -->
             <div class="form-group col-span-12">

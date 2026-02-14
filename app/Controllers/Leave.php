@@ -186,6 +186,34 @@ class Leave extends BaseController
             $userModel->update($userId, ['leave_balance_n' => 0]);
         }
 
+        // 3. Cuti Sakit Rules
+        if ($leaveType['name'] == 'Cuti Sakit') {
+            $sickCategory = $request->getVar('category');
+
+            // Check PPPK Contract
+            if ($targetUser['user_type'] !== 'PNS' && !empty($targetUser['contract_end_date'])) {
+                $contractEnd = new \DateTime($targetUser['contract_end_date']);
+                if ($end > $contractEnd) {
+                    return redirect()->back()->withInput()->with('errors', ['Masa cuti sakit melampaui masa berlaku kontrak Anda (Berakhir: ' . $contractEnd->format('d/m/Y') . ').']);
+                }
+            }
+
+            // Gugur Kandungan Rule: Max 45 days
+            if ($sickCategory == 'Gugur Kandungan') {
+                if ($duration > 45) {
+                    return redirect()->back()->withInput()->with('errors', ['Cuti Sakit Gugur Kandungan maksimal diberikan selama 45 hari (1,5 bulan).']);
+                }
+            }
+
+            // Kecelakaan Kerja: No strict duration limit in the 365 days sense if justified, 
+            // but we usually follow max_duration unless overridden.
+            // For now, let's just allow it to bypass max_duration if it's Kecelakaan Kerja.
+            if ($sickCategory == 'Kecelakaan Kerja') {
+                // Bypass max_duration check below by setting it high
+                $leaveType['max_duration'] = 9999;
+            }
+        }
+
         // 3. Max Duration Check
         if ($duration > $leaveType['max_duration']) {
             return redirect()->back()->withInput()->with('errors', ["Durasi cuti melebihi batas maksimal ({$leaveType['max_duration']} hari)."]);

@@ -206,6 +206,52 @@
                     document.getElementById('reason_hint').innerHTML = '<span style="color: #ef4444; font-weight: 600;">PENTING:</span> Mengambil Cuti Besar akan <strong>menghapus jatah Cuti Tahunan</strong> Anda di tahun berjalan.<br><span style="color: #ef4444; font-weight: 600;">SISA HAK HAPUS:</span> Jika diambil kurang dari 3 bulan, sisa jatah di siklus ini akan hangus.';
                 }
             });
+        } else if (typeName === 'Cuti Sakit') {
+            categoryContainer.style.display = 'block';
+            categoryContainer.innerHTML = `
+                <select name="category" id="category" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Outfit', sans-serif; box-sizing: border-box;">
+                    <option value="Sakit Biasa">Sakit Biasa</option>
+                    <option value="Gugur Kandungan">Gugur Kandungan (Max 45 Hari)</option>
+                    <option value="Kecelakaan Kerja">Kecelakaan Kerja</option>
+                </select>
+            `;
+
+            // Hide manual reason and replace with hidden sync
+            reasonContainer.innerHTML = '<input type="hidden" name="reason" id="reason_hidden">';
+            const reasonHidden = document.getElementById('reason_hidden');
+
+            const updateSickHint = () => {
+                const categorySelect = document.getElementById('category');
+                const category = categorySelect.value;
+                reasonHidden.value = category; // Sync category to reason
+
+                const start = new Date(startDateInput.value);
+                const end = new Date(endDateInput.value);
+                let hint = '';
+
+                if (startDateInput.value && endDateInput.value) {
+                    const diffTime = Math.abs(end - start);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+                    if (category === 'Gugur Kandungan') {
+                        hint = '<span style="color: #ef4444; font-weight: 600;">GUGUR KANDUNGAN:</span> Maksimal jatah 45 hari (1,5 bulan).';
+                    } else if (category === 'Kecelakaan Kerja') {
+                        hint = '<span style="color: #059669; font-weight: 600;">KECELAKAAN KERJA:</span> Diberikan sampai sembuh total tanpa batas waktu kaku.';
+                    } else {
+                        if (diffDays > 14) {
+                            hint = '<span style="color: #ef4444; font-weight: 600;">DURASI > 14 HARI:</span> Wajib melampirkan Surat Keterangan dari <strong>Dokter Pemerintah</strong>.';
+                        } else {
+                            hint = '<span style="color: #6b7280;">DURASI 1-14 HARI:</span> Wajib melampirkan Surat Keterangan Dokter (Puskesmas/Klinik/RS).';
+                        }
+                    }
+                }
+                document.getElementById('reason_hint').innerHTML = hint;
+            };
+
+            document.getElementById('category').addEventListener('change', updateSickHint);
+            startDateInput.addEventListener('change', updateSickHint);
+            endDateInput.addEventListener('change', updateSickHint);
+            updateSickHint();
         }
     });
 
