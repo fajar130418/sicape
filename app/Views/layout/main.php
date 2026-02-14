@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,17 +42,43 @@
         }
 
         .sidebar-header {
-            padding: 1.5rem;
+            padding: 1.25rem 1rem;
             display: flex;
+            flex-direction: column;
             align-items: center;
             border-bottom: 1px solid #f3f4f6;
+            text-align: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-logo {
+            width: 70px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+        }
+
+        .sidebar-header .app-name-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .sidebar-header h2 {
-            font-size: 1.25rem;
+            font-size: 1.4rem;
             margin: 0;
             color: var(--primary-color);
-            font-weight: 700;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            line-height: 1;
+        }
+
+        .sidebar-header p {
+            font-size: 0.65rem;
+            margin: 0;
+            color: var(--text-muted, #64748b);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
         }
 
         .sidebar-menu {
@@ -76,7 +103,8 @@
             font-weight: 500;
         }
 
-        .sidebar-menu a:hover, .sidebar-menu a.active {
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
             background-color: #eef2ff;
             color: var(--primary-color);
         }
@@ -254,7 +282,8 @@
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             padding: 1rem;
             text-align: left;
             border-bottom: 1px solid #f3f4f6;
@@ -280,9 +309,20 @@
             font-weight: 600;
         }
 
-        .badge-success { background: #d1fae5; color: #065f46; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-danger { background: #fee2e2; color: #b91c1c; }
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
 
         /* Form System */
         .form-grid {
@@ -290,16 +330,37 @@
             grid-template-columns: repeat(12, 1fr);
             gap: 1.5rem;
         }
-        
-        .col-span-12 { grid-column: span 12; }
-        .col-span-8 { grid-column: span 8; }
-        .col-span-6 { grid-column: span 6; }
-        .col-span-4 { grid-column: span 4; }
-        .col-span-3 { grid-column: span 3; }
-        .col-span-2 { grid-column: span 2; }
+
+        .col-span-12 {
+            grid-column: span 12;
+        }
+
+        .col-span-8 {
+            grid-column: span 8;
+        }
+
+        .col-span-6 {
+            grid-column: span 6;
+        }
+
+        .col-span-4 {
+            grid-column: span 4;
+        }
+
+        .col-span-3 {
+            grid-column: span 3;
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
 
         @media (max-width: 768px) {
-            .col-span-6, .col-span-4, .col-span-3, .col-span-2 {
+
+            .col-span-6,
+            .col-span-4,
+            .col-span-3,
+            .col-span-2 {
                 grid-column: span 12;
             }
         }
@@ -307,7 +368,8 @@
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 0.35rem; /* Space between label and input */
+            gap: 0.35rem;
+            /* Space between label and input */
         }
 
         .form-label {
@@ -330,7 +392,8 @@
             color: #1f2937;
             background-color: #fff;
             transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-            box-sizing: border-box; /* Ensures padding doesn't overflow width */
+            box-sizing: border-box;
+            /* Ensures padding doesn't overflow width */
         }
 
         .form-control:focus {
@@ -366,7 +429,7 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        
+
         input[type="file"]::file-selector-button:hover {
             background: #e5e7eb;
         }
@@ -408,10 +471,15 @@
         }
     </style>
 </head>
+
 <body>
     <aside class="sidebar">
         <div class="sidebar-header">
-            <h2>Dispusip Seruyan</h2>
+            <img src="<?= base_url('assets/img/logo.png') ?>" alt="Logo" class="sidebar-logo">
+            <div class="app-name-container">
+                <h2>SICAPE</h2>
+                <p>Sistem Cuti Administrasi Pegawai</p>
+            </div>
         </div>
         <ul class="sidebar-menu">
             <li>
@@ -424,8 +492,9 @@
                     <i class="fas fa-plus-circle"></i> Ajukan Cuti
                 </a>
             </li>
-             <li>
-                <a href="<?= base_url('leave/history') ?>" class="<?= uri_string() == 'leave/history' ? 'active' : '' ?>">
+            <li>
+                <a href="<?= base_url('leave/history') ?>"
+                    class="<?= uri_string() == 'leave/history' ? 'active' : '' ?>">
                     <i class="fas fa-history"></i> Riwayat Cuti
                 </a>
             </li>
@@ -434,32 +503,35 @@
                     <i class="fas fa-check-circle"></i> Persetujuan Atasan
                 </a>
             </li>
-            <?php if(session()->get('role') == 'admin'): ?>
-            <li>
-                <a href="<?= base_url('admin') ?>">
-                    <i class="fas fa-user-shield"></i> Admin Panel
-                </a>
-            </li>
-            <li>
-                <a href="<?= base_url('employee') ?>" class="<?= uri_string() == 'employee' ? 'active' : '' ?>">
-                    <i class="fas fa-users"></i> Manajemen Pegawai
-                </a>
-            </li>
-            <li>
-                <a href="<?= base_url('employee/supervisors') ?>" class="<?= uri_string() == 'employee/supervisors' ? 'active' : '' ?>">
-                    <i class="fas fa-user-tie"></i> Data Atasan
-                </a>
-            </li>
-            <li>
-                <a href="<?= base_url('employee/admins') ?>" class="<?= uri_string() == 'employee/admins' ? 'active' : '' ?>">
-                    <i class="fas fa-user-shield"></i> Data Administrator
-                </a>
-            </li>
-            <li>
-                <a href="<?= base_url('admin/holidays') ?>" class="<?= uri_string() == 'admin/holidays' ? 'active' : '' ?>">
-                    <i class="fas fa-calendar-times"></i> Manajemen Hari Libur
-                </a>
-            </li>
+            <?php if (session()->get('role') == 'admin'): ?>
+                <li>
+                    <a href="<?= base_url('admin') ?>">
+                        <i class="fas fa-user-shield"></i> Admin Panel
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= base_url('employee') ?>" class="<?= uri_string() == 'employee' ? 'active' : '' ?>">
+                        <i class="fas fa-users"></i> Manajemen Pegawai
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= base_url('employee/supervisors') ?>"
+                        class="<?= uri_string() == 'employee/supervisors' ? 'active' : '' ?>">
+                        <i class="fas fa-user-tie"></i> Data Atasan
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= base_url('employee/admins') ?>"
+                        class="<?= uri_string() == 'employee/admins' ? 'active' : '' ?>">
+                        <i class="fas fa-user-shield"></i> Data Administrator
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= base_url('admin/holidays') ?>"
+                        class="<?= uri_string() == 'admin/holidays' ? 'active' : '' ?>">
+                        <i class="fas fa-calendar-times"></i> Manajemen Hari Libur
+                    </a>
+                </li>
             <?php endif; ?>
         </ul>
         <div class="sidebar-footer">
@@ -472,7 +544,8 @@
                     <p><?= session()->get('role') == 'admin' ? 'Administrator' : 'Pegawai ASN' ?></p>
                 </div>
             </div>
-            <a href="<?= base_url('logout') ?>" class="btn btn-danger btn-sm" style="width: 100%; justify-content: center;">
+            <a href="<?= base_url('logout') ?>" class="btn btn-danger btn-sm"
+                style="width: 100%; justify-content: center;">
                 <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Logout
             </a>
         </div>
@@ -482,4 +555,5 @@
         <?= $this->renderSection('content') ?>
     </main>
 </body>
+
 </html>

@@ -10,7 +10,7 @@ class Auth extends BaseController
     public function index()
     {
         if (session()->get('logged_in')) {
-            return redirect()->to(session()->get('role') === 'admin' ? '/admin' : '/dashboard');
+            return redirect()->to('/dashboard');
         }
         return view('auth/login');
     }
@@ -29,15 +29,15 @@ class Auth extends BaseController
             $verify_pass = password_verify($password, $pass);
             if ($verify_pass) {
                 $ses_data = [
-                    'id'       => $data['id'],
-                    'nip'      => $data['nip'],
-                    'name'     => $data['name'],
-                    'role'     => $data['role'],
-                    'join_date'=> $data['join_date'],
-                    'logged_in'     => TRUE
+                    'id' => $data['id'],
+                    'nip' => $data['nip'],
+                    'name' => $data['name'],
+                    'role' => $data['role'],
+                    'join_date' => $data['join_date'],
+                    'logged_in' => TRUE
                 ];
                 $session->set($ses_data);
-                return redirect()->to($data['role'] === 'admin' ? '/admin' : '/dashboard');
+                return redirect()->to('/dashboard');
             } else {
                 $session->setFlashdata('msg', 'Password Salah');
                 return redirect()->to('/login');
