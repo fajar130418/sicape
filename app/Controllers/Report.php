@@ -75,6 +75,7 @@ class Report extends BaseController
         $end_date = $this->request->getVar('end_date');
         $status = $this->request->getVar('status');
         $type = $this->request->getVar('type');
+        $user_id = $this->request->getVar('user_id');
 
         $query = $this->leaveRequestModel->select('leave_requests.*, users.name as user_name, users.nip, leave_types.name as type_name')
             ->join('users', 'users.id = leave_requests.user_id')
@@ -88,6 +89,8 @@ class Report extends BaseController
             $query->where('status', $status);
         if ($type)
             $query->where('leave_type_id', $type);
+        if ($user_id)
+            $query->where('user_id', $user_id);
 
         $requests = $query->orderBy('created_at', 'DESC')->findAll();
 
@@ -95,11 +98,13 @@ class Report extends BaseController
             'title' => 'Riwayat Detail Pengajuan Cuti',
             'requests' => $requests,
             'leave_types' => $this->leaveTypeModel->findAll(),
+            'users' => $this->userModel->orderBy('name', 'ASC')->findAll(),
             'filters' => [
                 'start_date' => $start_date,
                 'end_date' => $end_date,
                 'status' => $status,
-                'type' => $type
+                'type' => $type,
+                'user_id' => $user_id
             ]
         ];
 

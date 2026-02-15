@@ -16,10 +16,9 @@ class Dashboard extends BaseController
         $userModel = new \App\Models\UserModel();
         $user = $userModel->find($userId);
 
-        $joinDateObj = new \DateTime($user['join_date']);
-        $today = new \DateTime();
-        $interval = $joinDateObj->diff($today);
-        $yearsOfService = $interval->y;
+        $seniority = $userModel->calculateSeniority($userId);
+        $yearsOfService = $seniority['years'];
+        $monthsOfService = $seniority['months'];
 
         // ASN Annual Leave Logic (FIFO)
         $detailed = $userModel->getDetailedRemainingLeave($userId);
@@ -52,6 +51,7 @@ class Dashboard extends BaseController
         $data = [
             'title' => 'Dashboard',
             'yearsOfService' => $yearsOfService,
+            'monthsOfService' => $monthsOfService,
             'annualLeaveQuota' => $annualLeaveQuota,
             'usedAnnualLeave' => $usedAnnualLeave,
             'remainingAnnualLeave' => $remainingAnnualLeave,

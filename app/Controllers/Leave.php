@@ -19,6 +19,11 @@ class Leave extends BaseController
         if (session()->get('role') == 'admin') {
             $userModel = new \App\Models\UserModel();
             $data['users'] = $userModel->orderBy('name', 'ASC')->findAll();
+        } else {
+            // Filter out 'Cuti Khusus' for non-admins
+            $data['leave_types'] = array_filter($data['leave_types'], function ($type) {
+                return $type['name'] !== 'Cuti Khusus';
+            });
         }
 
         return view('leave/create', $data);
@@ -147,131 +152,148 @@ class Leave extends BaseController
             }
         }
 
-        // 2. Cuti Besar Rules
-        if ($leaveType['name'] == 'Cuti Besar') {
-            // Check User Type
-            $userType = $targetUser['user_type'] ?? 'PNS';
-            if ($userType !== 'PNS') {
-                return redirect()->back()->withInput()->with('errors', ['Cuti Besar hanya diperuntukkan bagi PNS. PPPK dan PPPK Paruh Waktu tidak berhak mengajukan Cuti Besar.']);
+        // 1b. Cuti Khusus Rules (Admin Only & Cuti Tahunan harus 0)
+        $isSpecialLeave = ($leaveType['name'] == 'Cuti Khusus');
+        if ($isSpecialLeave) {
+            if (session()->get('role') !== 'admin') {
+                return redirect()->back()->withInput()->with('errors', ['Hanya Administrator yang dapat mengajukan Cuti Khusus.']);
             }
 
-            $leaveCategory = $request->getVar('category');
-
-            // Haji Exception: PNS yang belum mencapai 5 tahun boleh mengambil cuti besar untuk ibadah keagamaan (Haji Pertama).
-            $isHaji = ($leaveCategory == 'Ibadah Keagamaan (Haji Pertama)');
-
-            if ($yearsOfService < 5 && !$isHaji) {
-                return redirect()->back()->withInput()->with('errors', ['Anda belum berhak mengambil Cuti Besar (Masa kerja < 5 tahun). Kecuali untuk Ibadah Keagamaan (Haji Pertama).']);
+            $currentRemaining = $userModel->getRemainingLeave($userId);
+            if ($currentRemaining > 0) {
+                return redirect()->back()->withInput()->with('errors', ["Cuti Khusus hanya dapat diambil jika Cuti Tahunan sudah habis. Sisa Cuti Tahunan Anda saat ini: " . $currentRemaining . " hari."]);
             }
-
-            // Milestone-based Forfeiture Check: 
-            // Once taken in a 5-year period, the "sisa hak" (remaining balance) for that period is forfeited.
-            $milestoneIndex = floor($yearsOfService / 5);
-            $lastMilestoneYears = $milestoneIndex * 5;
-            $joinDateObj = new \DateTime($joinDate);
-            $milestoneDate = clone $joinDateObj;
-            $milestoneDate->modify("+$lastMilestoneYears years");
-
-            $previousBigLeave = $db->table('leave_requests')
-                ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
-                ->where('user_id', $userId)
-                ->where('leave_types.name', 'Cuti Besar')
-                ->whereIn('status', ['approved', 'pending'])
-                ->where('start_date >=', $milestoneDate->format('Y-m-d'))
-                ->countAllResults();
-
-            if ($previousBigLeave > 0) {
-                return redirect()->back()->withInput()->with('errors', ['Anda sudah pernah mengambil Cuti Besar dalam siklus 5 tahun ini (Milestone: ' . $milestoneDate->format('d/m/Y') . '). Sesuai regulasi, sisa jatah hak Cuti Besar Anda di siklus ini dianggap hangus.']);
-            }
-
-            // Special Rule: ASN yang mengambil cuti besar tidak berhak lagi atas cuti tahunan di tahun yang sama.
-            // Reset Annual Leave Balance for this year
-            $userModel->update($userId, ['leave_balance_n' => 0]);
         }
 
-        // 3. Cuti Sakit Rules
-        if ($leaveType['name'] == 'Cuti Sakit') {
-            $sickCategory = $request->getVar('category');
+        // Specific Rules Validation (Skip for Cuti Khusus)
+        if (!$isSpecialLeave) {
+            // 2. Cuti Besar Rules
+            if ($leaveType['name'] == 'Cuti Besar') {
+                // Check User Type
+                $userType = $targetUser['user_type'] ?? 'PNS';
+                if ($userType !== 'PNS') {
+                    return redirect()->back()->withInput()->with('errors', ['Cuti Besar hanya diperuntukkan bagi PNS. PPPK dan PPPK Paruh Waktu tidak berhak mengajukan Cuti Besar.']);
+                }
 
-            // Check PPPK Contract
-            if ($targetUser['user_type'] !== 'PNS' && !empty($targetUser['contract_end_date'])) {
-                $contractEnd = new \DateTime($targetUser['contract_end_date']);
-                if ($end > $contractEnd) {
-                    return redirect()->back()->withInput()->with('errors', ['Masa cuti sakit melampaui masa berlaku kontrak Anda (Berakhir: ' . $contractEnd->format('d/m/Y') . ').']);
+                $leaveCategory = $request->getVar('category');
+
+                // Haji Exception: PNS yang belum mencapai 5 tahun boleh mengambil cuti besar untuk ibadah keagamaan (Haji Pertama).
+                $isHaji = ($leaveCategory == 'Ibadah Keagamaan (Haji Pertama)');
+
+                if ($yearsOfService < 5 && !$isHaji) {
+                    return redirect()->back()->withInput()->with('errors', ['Anda belum berhak mengambil Cuti Besar (Masa kerja < 5 tahun). Kecuali untuk Ibadah Keagamaan (Haji Pertama).']);
+                }
+
+                // Milestone-based Forfeiture Check: 
+                // Once taken in a 5-year period, the "sisa hak" (remaining balance) for that period is forfeited.
+                $milestoneIndex = floor($yearsOfService / 5);
+                $lastMilestoneYears = $milestoneIndex * 5;
+                $joinDateObj = new \DateTime($joinDate);
+                $milestoneDate = clone $joinDateObj;
+                $milestoneDate->modify("+$lastMilestoneYears years");
+
+                $previousBigLeave = $db->table('leave_requests')
+                    ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+                    ->where('user_id', $userId)
+                    ->where('leave_types.name', 'Cuti Besar')
+                    ->whereIn('status', ['approved', 'pending'])
+                    ->where('start_date >=', $milestoneDate->format('Y-m-d'))
+                    ->countAllResults();
+
+                if ($previousBigLeave > 0) {
+                    return redirect()->back()->withInput()->with('errors', ['Anda sudah pernah mengambil Cuti Besar dalam siklus 5 tahun ini (Milestone: ' . $milestoneDate->format('d/m/Y') . '). Sesuai regulasi, sisa jatah hak Cuti Besar Anda di siklus ini dianggap hangus.']);
+                }
+
+                // Special Rule: ASN yang mengambil cuti besar tidak berhak lagi atas cuti tahunan di tahun yang sama.
+                // Reset Annual Leave Balance for this year
+                $userModel->update($userId, ['leave_balance_n' => 0]);
+            }
+
+            // 3. Cuti Sakit Rules
+            if ($leaveType['name'] == 'Cuti Sakit') {
+                $sickCategory = $request->getVar('category');
+
+                // Check PPPK Contract
+                if ($targetUser['user_type'] !== 'PNS' && !empty($targetUser['contract_end_date'])) {
+                    $contractEnd = new \DateTime($targetUser['contract_end_date']);
+                    if ($end > $contractEnd) {
+                        return redirect()->back()->withInput()->with('errors', ['Masa cuti sakit melampaui masa berlaku kontrak Anda (Berakhir: ' . $contractEnd->format('d/m/Y') . ').']);
+                    }
+                }
+
+                // Gugur Kandungan Rule: Max 45 days
+                if ($sickCategory == 'Gugur Kandungan') {
+                    if ($duration > 45) {
+                        return redirect()->back()->withInput()->with('errors', ['Cuti Sakit Gugur Kandungan maksimal diberikan selama 45 hari (1,5 bulan).']);
+                    }
+                }
+
+                // Kecelakaan Kerja: No strict duration limit in the 365 days sense if justified, 
+                // but we usually follow max_duration unless overridden.
+                // For now, let's just allow it to bypass max_duration if it's Kecelakaan Kerja.
+                if ($sickCategory == 'Kecelakaan Kerja') {
+                    // Bypass max_duration check below by setting it high
+                    $leaveType['max_duration'] = 9999;
                 }
             }
 
-            // Gugur Kandungan Rule: Max 45 days
-            if ($sickCategory == 'Gugur Kandungan') {
-                if ($duration > 45) {
-                    return redirect()->back()->withInput()->with('errors', ['Cuti Sakit Gugur Kandungan maksimal diberikan selama 45 hari (1,5 bulan).']);
+            // 4. Cuti Melahirkan Rules
+            if ($leaveType['name'] == 'Cuti Melahirkan') {
+                $maternityCategory = $request->getVar('category');
+
+                // 4th Child Rule
+                if ($maternityCategory == 'Anak ke-4 atau lebih') {
+                    return redirect()->back()->withInput()->with('errors', ['Cuti Melahirkan hanya diberikan s.d kelahiran anak ke-3. Untuk kelahiran anak ke-4 dan seterusnya, silakan gunakan jenis Cuti Besar.']);
                 }
+
+                // Duplicate Birth Order Check
+                $fullReason = 'Cuti Melahirkan - ' . $maternityCategory;
+                $duplicateCheck = $db->table('leave_requests')
+                    ->where('user_id', $userId)
+                    ->where('reason', $fullReason)
+                    ->whereIn('status', ['approved', 'pending'])
+                    ->countAllResults();
+
+                if ($duplicateCheck > 0) {
+                    return redirect()->back()->withInput()->with('errors', ['Anda sudah pernah mengajukan Cuti Melahirkan untuk ' . $maternityCategory . '. Silakan pilih urutan kelahiran yang benar.']);
+                }
+
+                $maxEnd = clone $start;
+                $maxEnd->modify('+3 months')->modify('-1 day');
+
+                if ($end > $maxEnd) {
+                    return redirect()->back()->withInput()->with('errors', ['Maksimal durasi Cuti Melahirkan adalah 3 bulan kalender (Batas: ' . $maxEnd->format('d/m/Y') . ').']);
+                }
+
+                // Bypass fixed max_duration if it exists in db, as we use 3 months logic
+                $leaveType['max_duration'] = 999;
             }
 
-            // Kecelakaan Kerja: No strict duration limit in the 365 days sense if justified, 
-            // but we usually follow max_duration unless overridden.
-            // For now, let's just allow it to bypass max_duration if it's Kecelakaan Kerja.
-            if ($sickCategory == 'Kecelakaan Kerja') {
-                // Bypass max_duration check below by setting it high
+            // 5. CLTN Rules
+            if ($leaveType['name'] == 'Cuti di Luar Tanggungan Negara') {
+                // Only PNS can apply for CLTN
+                if ($targetUser['user_type'] != 'PNS') {
+                    return redirect()->back()->withInput()->with('errors', ['Cuti di Luar Tanggungan Negara (CLTN) hanya dapat diajukan oleh pegawai berstatus PNS.']);
+                }
+
+                // Must have worked for at least 5 years
+                if ($yearsOfService < 5) {
+                    return redirect()->back()->withInput()->with('errors', ['Syarat pengajuan CLTN adalah masa kerja minimal 5 tahun terus-menerus sebagai PNS.']);
+                }
+
+                // Durasi Maksimal 3 Tahun (1095 Hari)
+                if ($duration > 1095) {
+                    return redirect()->back()->withInput()->with('errors', ['Maksimal durasi CLTN adalah 3 tahun (1095 hari).']);
+                }
+
+                // Bypass max_duration DB
                 $leaveType['max_duration'] = 9999;
             }
-        }
 
-        // 4. Cuti Melahirkan Rules
-        if ($leaveType['name'] == 'Cuti Melahirkan') {
-            $maternityCategory = $request->getVar('category');
-
-            // 4th Child Rule
-            if ($maternityCategory == 'Anak ke-4 atau lebih') {
-                return redirect()->back()->withInput()->with('errors', ['Cuti Melahirkan hanya diberikan s.d kelahiran anak ke-3. Untuk kelahiran anak ke-4 dan seterusnya, silakan gunakan jenis Cuti Besar.']);
-            }
-
-            // Duplicate Birth Order Check
-            $fullReason = 'Cuti Melahirkan - ' . $maternityCategory;
-            $duplicateCheck = $db->table('leave_requests')
-                ->where('user_id', $userId)
-                ->where('reason', $fullReason)
-                ->whereIn('status', ['approved', 'pending'])
-                ->countAllResults();
-
-            if ($duplicateCheck > 0) {
-                return redirect()->back()->withInput()->with('errors', ['Anda sudah pernah mengajukan Cuti Melahirkan untuk ' . $maternityCategory . '. Silakan pilih urutan kelahiran yang benar.']);
-            }
-
-            $maxEnd = clone $start;
-            $maxEnd->modify('+3 months')->modify('-1 day');
-
-            if ($end > $maxEnd) {
-                return redirect()->back()->withInput()->with('errors', ['Maksimal durasi Cuti Melahirkan adalah 3 bulan kalender (Batas: ' . $maxEnd->format('d/m/Y') . ').']);
-            }
-
-            // Bypass fixed max_duration if it exists in db, as we use 3 months logic
-            $leaveType['max_duration'] = 999;
-        }
-
-        // 5. CLTN Rules
-        if ($leaveType['name'] == 'Cuti di Luar Tanggungan Negara') {
-            // Only PNS can apply for CLTN
-            if ($targetUser['user_type'] != 'PNS') {
-                return redirect()->back()->withInput()->with('errors', ['Cuti di Luar Tanggungan Negara (CLTN) hanya dapat diajukan oleh pegawai berstatus PNS.']);
-            }
-
-            // Must have worked for at least 5 years
-            if ($yearsOfService < 5) {
-                return redirect()->back()->withInput()->with('errors', ['Syarat pengajuan CLTN adalah masa kerja minimal 5 tahun terus-menerus sebagai PNS.']);
-            }
-
-            // Durasi Maksimal 3 Tahun (1095 Hari)
-            if ($duration > 1095) {
-                return redirect()->back()->withInput()->with('errors', ['Maksimal durasi CLTN adalah 3 tahun (1095 hari).']);
-            }
-
-            // Bypass max_duration DB
-            $leaveType['max_duration'] = 9999;
         }
 
         // 3. Max Duration Check
-        if ($duration > $leaveType['max_duration']) {
+        if (!$isSpecialLeave && $duration > $leaveType['max_duration']) {
             return redirect()->back()->withInput()->with('errors', ["Durasi cuti melebihi batas maksimal ({$leaveType['max_duration']} hari)."]);
         }
 
@@ -305,6 +327,10 @@ class Leave extends BaseController
 
         $model = new \App\Models\LeaveRequestModel();
 
+        // Get Head of Agency
+        $headOfAgencyDataset = $db->table('users')->where('is_head_of_agency', 1)->get()->getRowArray();
+        $headId = $headOfAgencyDataset ? $headOfAgencyDataset['id'] : null;
+
         $data = [
             'user_id' => $userId,
             'leave_type_id' => $leaveTypeId,
@@ -317,7 +343,9 @@ class Leave extends BaseController
             'attachment' => $fileName,
             'status' => 'pending',
             'supervisor_id' => $supervisorId,
-            'supervisor_status' => 'pending'
+            'supervisor_status' => 'pending',
+            'head_id' => $headId,
+            'head_status' => 'pending'
         ];
 
         $model->save($data);
@@ -381,6 +409,13 @@ class Leave extends BaseController
 
         if ($request['status'] != 'approved' && !$isHeadOfAgency) {
             return redirect()->back()->with('error', 'Dokumen hanya dapat diunduh setelah disetujui.');
+        }
+
+        // Additional check for Cuti Khusus: Must have both approvals
+        if ($request['type_name'] == 'Cuti Khusus') {
+            if ($request['supervisor_status'] != 'approved' || $request['head_status'] != 'approved') {
+                return redirect()->back()->with('error', 'Cuti Khusus harus disetujui oleh Atasan Langsung DAN Kepala Dinas sebelum dicetak.');
+            }
         }
 
         // Calculate tenure text

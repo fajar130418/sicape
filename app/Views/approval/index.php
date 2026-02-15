@@ -4,7 +4,7 @@
 
 <?= $this->section('content') ?>
 <div class="page-header">
-    <h1 class="page-title">Persetujuan Cuti (Sebagai Atasan)</h1>
+    <h1 class="page-title">Persetujuan Cuti</h1>
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
@@ -14,7 +14,19 @@
     </div>
 <?php endif; ?>
 
-<div class="card">
+<?php if (session()->getFlashdata('error')): ?>
+    <div
+        style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <?= session()->getFlashdata('error') ?>
+    </div>
+<?php endif; ?>
+
+<!-- 1. ANTREAN ATASAN LANGSUNG -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <h3 class="card-title" style="color: #475569;"><i class="fas fa-users-cog" style="margin-right: 8px;"></i>
+            Sebagai Atasan Langsung</h3>
+    </div>
     <div class="table-responsive">
         <table>
             <thead>
@@ -29,13 +41,13 @@
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($requests)): ?>
+                <?php if (empty($supervisorRequests)): ?>
                     <tr>
                         <td colspan="7" style="text-align:center; color:#9ca3af; padding: 2rem;">Tidak ada permintaan cuti
-                            yang perlu disetujui.</td>
+                            yang menunggu persetujuan Anda sebagai atasan.</td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($requests as $row): ?>
+                    <?php foreach ($supervisorRequests as $row): ?>
                         <tr>
                             <td>
                                 <strong><?= $row['user_name'] ?></strong><br>
@@ -46,13 +58,7 @@
                                 <?= date('d/m/Y', strtotime($row['start_date'])) ?> -
                                 <?= date('d/m/Y', strtotime($row['end_date'])) ?>
                             </td>
-                            <td>
-                                <?php
-                                $start = new DateTime($row['start_date']);
-                                $end = new DateTime($row['end_date']);
-                                echo $start->diff($end)->days + 1 . ' Hari';
-                                ?>
-                            </td>
+                            <td><?= $row['duration'] ?> Hari</td>
                             <td><?= $row['reason'] ?></td>
                             <td>
                                 <?php if ($row['attachment']): ?>
@@ -85,6 +91,82 @@
                                     <button type="button" class="btn btn-sm btn-info"
                                         onclick="toggleNote(<?= $row['id'] ?>, 'changed')"
                                         style="background-color: #3b82f6; color: white;">Perubahan</button>
+                                    <button type="button" class="btn btn-sm btn-danger"
+                                        onclick="toggleNote(<?= $row['id'] ?>, 'rejected')">Tolak</button>
+                                </div>
+
+                                <div id="note-form-<?= $row['id'] ?>" style="display:none; margin-top: 10px;">
+                                    <form action="" method="post" id="form-note-<?= $row['id'] ?>">
+                                        <?= csrf_field() ?>
+                                        <textarea name="note" placeholder="Catatan/Alasan..." required
+                                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 0.5rem; font-family: sans-serif;"></textarea>
+                                        <button type="submit" class="btn btn-sm btn-primary">Kirim</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 2. ANTREAN KEPALA DINAS -->
+<div class="card">
+    <div class="card-header" style="background: #fdf2f2; border-bottom: 1px solid #fee2e2;">
+        <h3 class="card-title" style="color: #991b1b;"><i class="fas fa-user-shield" style="margin-right: 8px;"></i>
+            Sebagai Kepala Dinas</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Pemohon</th>
+                    <th>Tipe Cuti</th>
+                    <th>Periode</th>
+                    <th>Durasi</th>
+                    <th>Alasan</th>
+                    <th>Status Atasan</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($headRequests)): ?>
+                    <tr>
+                        <td colspan="7" style="text-align:center; color:#9ca3af; padding: 2rem;">Tidak ada permintaan cuti
+                            yang menunggu persetujuan Anda sebagai Kepala Dinas.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($headRequests as $row): ?>
+                        <tr>
+                            <td>
+                                <strong><?= $row['user_name'] ?></strong><br>
+                                <small style="color: #6b7280;"><?= $row['nip'] ?></small>
+                            </td>
+                            <td><?= $row['type_name'] ?></td>
+                            <td>
+                                <?= date('d/m/Y', strtotime($row['start_date'])) ?> -
+                                <?= date('d/m/Y', strtotime($row['end_date'])) ?>
+                            </td>
+                            <td><?= $row['duration'] ?> Hari</td>
+                            <td><?= $row['reason'] ?></td>
+                            <td>
+                                <?php if ($row['supervisor_status'] == 'approved'): ?>
+                                    <span class="badge badge-success">Disetujui</span>
+                                <?php else: ?>
+                                    <span class="badge badge-warning">Menunggu</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <form action="<?= base_url('approval/process/' . $row['id'] . '/approved') ?>" method="post"
+                                        style="display:inline;" id="form-approve-<?= $row['id'] ?>">
+                                        <?= csrf_field() ?>
+                                        <button type="button" class="btn btn-sm btn-primary"
+                                            onclick="confirmApprove(<?= $row['id'] ?>)">Setuju</button>
+                                    </form>
+
                                     <button type="button" class="btn btn-sm btn-danger"
                                         onclick="toggleNote(<?= $row['id'] ?>, 'rejected')">Tolak</button>
                                 </div>

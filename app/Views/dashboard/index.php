@@ -32,7 +32,7 @@
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-content">
-            <h3><?= $yearsOfService ?> Tahun</h3>
+            <h3><?= $yearsOfService ?> Thn <?= $monthsOfService ?> Bln</h3>
             <p>Masa Kerja</p>
         </div>
         <div class="stat-icon" style="background: #e0e7ff; color: #4f46e5;">

@@ -39,6 +39,17 @@
             </select>
         </div>
         <div class="form-group col-span-2">
+            <label class="form-label">Pegawai</label>
+            <select name="user_id" class="form-control">
+                <option value="">Semua</option>
+                <?php foreach ($users as $user): ?>
+                    <option value="<?= $user['id'] ?>" <?= $filters['user_id'] == $user['id'] ? 'selected' : '' ?>>
+                        <?= $user['name'] ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="form-group col-span-2">
             <label class="form-label">Status</label>
             <select name="status" class="form-control">
                 <option value="">Semua</option>
