@@ -7,6 +7,37 @@
     <h1 class="page-title">Ajukan Cuti Baru</h1>
 </div>
 
+<!-- Panel Regulasi Cuti -->
+<div
+    style="background-color: #f0fdf4; border: 1px solid #22c55e; border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem;">
+    <div style="display: flex; gap: 1rem; align-items: flex-start;">
+        <div
+            style="background-color: #22c55e; color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            <i class="fas fa-book"></i>
+        </div>
+        <div>
+            <h4 style="margin: 0 0 0.5rem 0; color: #166534; font-size: 1rem;">Pedoman Cuti ASN (Peraturan BKN No. 7
+                Tahun 2021)</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <ul style="margin: 0; padding-left: 1.25rem; color: #14532d; font-size: 0.85rem; line-height: 1.5;">
+                    <li><strong>Cuti Tahunan</strong>: Hak 12 hari per tahun setelah bekerja 1 tahun terus-menerus.</li>
+                    <li><strong>Cuti Sakit</strong>: Lebih dari 14 hari wajib melampirkan surat keterangan Dokter
+                        Pemerintah.</li>
+                    <li><strong>Cuti Melahirkan</strong>: Diberikan selama 3 bulan kalender untuk persalinan anak ke-1
+                        s.d ke-3.</li>
+                </ul>
+                <ul style="margin: 0; padding-left: 1.25rem; color: #14532d; font-size: 0.85rem; line-height: 1.5;">
+                    <li><strong>Cuti Besar</strong>: Syarat masa kerja minimal 5 tahun terus-menerus.</li>
+                    <li><strong>CLTN</strong>: Masa kerja minimal 5 tahun. Gaji & tunjangan dihentikan selama masa CLTN.
+                    </li>
+                    <li><strong>Persetujuan</strong>: Hak cuti dapat ditangguhkan jika kepentingan dinas sangat
+                        mendesak.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php if (session()->getFlashdata('errors')): ?>
     <div
         style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">

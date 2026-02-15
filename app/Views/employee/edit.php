@@ -10,6 +10,17 @@
     </a>
 </div>
 
+<?php if (session()->getFlashdata('errors')): ?>
+    <div
+        style="background-color: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <ul style="margin: 0; padding-left: 1.25rem;">
+            <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                <li><?= esc($error) ?></li>
+            <?php endforeach ?>
+        </ul>
+    </div>
+<?php endif; ?>
+
 <div class="card">
     <form action="<?= base_url('employee/update/' . $employee['id']) ?>" method="post" enctype="multipart/form-data">
         <?= csrf_field() ?>
@@ -168,9 +179,9 @@
             </div>
 
             <div class="form-group col-span-6">
-                <label class="form-label">Tanggal Masuk (TMT)</label>
+                <label class="form-label">Tanggal Masuk (TMT) <span class="text-danger">*</span></label>
                 <input type="date" name="join_date" class="form-control"
-                    value="<?= old('join_date', $employee['join_date']) ?>">
+                    value="<?= old('join_date', $employee['join_date']) ?>" required>
             </div>
 
             <!-- ROW 11: ROLE & STATUS -->

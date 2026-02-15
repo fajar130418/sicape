@@ -528,6 +528,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="<?= base_url('employee/hierarchy') ?>"
+                        class="<?= uri_string() == 'employee/hierarchy' ? 'active' : '' ?>">
+                        <i class="fas fa-sitemap"></i> Manajemen Hirarki
+                    </a>
+                </li>
+                <li>
                     <a href="<?= base_url('employee/admins') ?>"
                         class="<?= uri_string() == 'employee/admins' ? 'active' : '' ?>">
                         <i class="fas fa-user-shield"></i> Data Administrator

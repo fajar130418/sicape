@@ -33,8 +33,7 @@
                     <th>No</th>
                     <th>NIP</th>
                     <th>Nama</th>
-                    <th>Tanggal Masuk</th>
-                    <th>Masa Kerja</th>
+                    <th>Atasan saat ini</th>
                     <th>Sisa Cuti</th>
                     <th>Aksi</th>
                 </tr>
@@ -42,7 +41,7 @@
             <tbody>
                 <?php if (empty($employees)): ?>
                     <tr>
-                        <td colspan="7" style="text-align:center; color:#9ca3af; padding: 2rem;">Belum ada data pegawai.
+                        <td colspan="6" style="text-align:center; color:#9ca3af; padding: 2rem;">Belum ada data pegawai.
                         </td>
                     </tr>
                 <?php else: ?>
@@ -52,13 +51,15 @@
                             <td><?= $i++ ?></td>
                             <td><?= $row['nip'] ?></td>
                             <td><?= $row['name'] ?></td>
-                            <td><?= date('d M Y', strtotime($row['join_date'])) ?></td>
                             <td>
                                 <?php
-                                $joinDate = new DateTime($row['join_date']);
-                                $today = new DateTime();
-                                $diff = $joinDate->diff($today);
-                                echo $diff->y . " Tahun " . $diff->m . " Bulan";
+                                if ($row['supervisor_id']) {
+                                    $userModel = new \App\Models\UserModel();
+                                    $supervisor = $userModel->find($row['supervisor_id']);
+                                    echo $supervisor ? $supervisor['name'] : '-';
+                                } else {
+                                    echo '<span style="color: #9ca3af; font-style: italic;">Belum ada</span>';
+                                }
                                 ?>
                             </td>
                             <td>
@@ -80,4 +81,5 @@
         </table>
     </div>
 </div>
+
 <?= $this->endSection() ?>

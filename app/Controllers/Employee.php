@@ -15,7 +15,12 @@ class Employee extends BaseController
         $userModel = new \App\Models\UserModel();
         $data = [
             'title' => 'Manajemen Pegawai',
-            'employees' => $userModel->where('role', 'pegawai')->findAll()
+            'employees' => $userModel->where('role', 'pegawai')->findAll(),
+            'potential_supervisors' => $userModel->groupStart()
+                ->where('role', 'admin')
+                ->orWhere('is_supervisor', 1)
+                ->groupEnd()
+                ->findAll()
         ];
 
         foreach ($data['employees'] as &$emp) {
@@ -60,7 +65,7 @@ class Employee extends BaseController
             'gender' => 'required',
             'rank' => 'required',
             'education' => 'required',
-            'photo' => 'uploaded[photo]|max_size[photo,2048]|is_image[photo]|mime_in[photo,image/jpg,image/jpeg,image/png]',
+            'photo' => 'permit_empty|max_size[photo,2048]|is_image[photo]|mime_in[photo,image/jpg,image/jpeg,image/png]',
         ];
 
         if (!$this->validate($rules)) {
@@ -311,5 +316,68 @@ class Employee extends BaseController
 
         $count = count($employeeIds);
         return redirect()->to('/employee/contracts')->with('success', "Berhasil memperbarui {$count} kontrak pegawai.");
+    }
+
+    public function massAssignSupervisor()
+    {
+        if (session()->get('role') !== 'admin') {
+            return redirect()->to('/dashboard');
+        }
+
+        $employeeIds = $this->request->getPost('employee_ids');
+        $supervisorId = $this->request->getPost('supervisor_id');
+
+        if (empty($employeeIds) || empty($supervisorId)) {
+            return redirect()->back()->with('error', 'Data tidak lengkap.');
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $userModel->whereIn('id', $employeeIds)
+            ->set(['supervisor_id' => $supervisorId])
+            ->update();
+
+        $count = count($employeeIds);
+        return redirect()->to('/employee')->with('success', "Berhasil menetapkan atasan untuk {$count} pegawai.");
+    }
+
+    public function hierarchy()
+    {
+        if (session()->get('role') !== 'admin') {
+            return redirect()->to('/dashboard');
+        }
+
+        $userModel = new \App\Models\UserModel();
+
+        // Fetch all possible supervisors
+        $supervisors = $userModel->groupStart()
+            ->where('role', 'admin')
+            ->orWhere('is_supervisor', 1)
+            ->groupEnd()
+            ->findAll();
+
+        $hierarchy = [];
+        foreach ($supervisors as $s) {
+            $subordinates = $userModel->where('supervisor_id', $s['id'])->findAll();
+            if (!empty($subordinates)) {
+                $hierarchy[] = [
+                    'supervisor' => $s,
+                    'subordinates' => $subordinates
+                ];
+            }
+        }
+
+        // Also fetch employees with NO supervisor
+        $noSupervisor = $userModel->where('role', 'pegawai')
+            ->where('supervisor_id', null)
+            ->findAll();
+
+        $data = [
+            'title' => 'Manajemen Hirarki Pegawai',
+            'hierarchy' => $hierarchy,
+            'noSupervisor' => $noSupervisor,
+            'potential_supervisors' => $supervisors
+        ];
+
+        return view('employee/hierarchy', $data);
     }
 }
