@@ -8,6 +8,27 @@
     <span class="date-today"><?= date('d F Y') ?></span>
 </div>
 
+</div>
+
+<?php if (session()->get('role') === 'admin' && $expiringPPPKCount > 0): ?>
+    <div
+        style="background: #fff; border-left: 4px solid #ef4444; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div
+                style="background: #fee2e2; color: #ef4444; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h4 style="margin: 0; color: #111827; font-size: 1rem;">Perhatian: Kontrak Pegawai Akan Berakhir</h4>
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Ada <strong><?= $expiringPPPKCount ?> pegawai
+                        PPPK</strong> yang kontraknya akan berakhir dalam waktu kurang dari 1 bulan.</p>
+            </div>
+        </div>
+        <a href="<?= base_url('employee/contracts') ?>" class="btn btn-primary btn-sm"
+            style="background-color: #ef4444;">Kelola Kontrak</a>
+    </div>
+<?php endif; ?>
+
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-content">
@@ -18,7 +39,7 @@
             <i class="fas fa-briefcase"></i>
         </div>
     </div>
-    
+
     <div class="stat-card">
         <div class="stat-content">
             <h3><?= $annualLeaveQuota ?> Hari</h3>
@@ -44,8 +65,8 @@
             <h3><?= $remainingAnnualLeave ?> Hari</h3>
             <p>Sisa Cuti Tahunan</p>
             <div style="font-size: 0.75rem; color: #92400e; margin-top: 0.5rem; line-height: 1.2;">
-                N: <?= $leaveBreakdown['n'] ?> | 
-                N-1: <?= $leaveBreakdown['n1'] ?> | 
+                N: <?= $leaveBreakdown['n'] ?> |
+                N-1: <?= $leaveBreakdown['n1'] ?> |
                 N-2: <?= $leaveBreakdown['n2'] ?>
             </div>
         </div>
@@ -74,7 +95,8 @@
             <tbody>
                 <?php if (empty($history)): ?>
                     <tr>
-                        <td colspan="5" style="text-align:center; color:#9ca3af; padding: 2rem;">Belum ada riwayat pengajuan cuti.</td>
+                        <td colspan="5" style="text-align:center; color:#9ca3af; padding: 2rem;">Belum ada riwayat pengajuan
+                            cuti.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($history as $row): ?>
@@ -83,10 +105,10 @@
                             <td><?= date('d M Y', strtotime($row['start_date'])) ?></td>
                             <td><?= date('d M Y', strtotime($row['end_date'])) ?></td>
                             <td>
-                                <?php 
-                                    $start = new DateTime($row['start_date']);
-                                    $end = new DateTime($row['end_date']);
-                                    echo $start->diff($end)->days + 1; 
+                                <?php
+                                $start = new DateTime($row['start_date']);
+                                $end = new DateTime($row['end_date']);
+                                echo $start->diff($end)->days + 1;
                                 ?>
                             </td>
                             <td>

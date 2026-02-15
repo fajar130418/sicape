@@ -516,6 +516,12 @@
                     </a>
                 </li>
                 <li>
+                    <a href="<?= base_url('employee/contracts') ?>"
+                        class="<?= uri_string() == 'employee/contracts' ? 'active' : '' ?>">
+                        <i class="fas fa-file-contract"></i> Manajemen Kontrak
+                    </a>
+                </li>
+                <li>
                     <a href="<?= base_url('employee/supervisors') ?>"
                         class="<?= uri_string() == 'employee/supervisors' ? 'active' : '' ?>">
                         <i class="fas fa-user-tie"></i> Data Atasan

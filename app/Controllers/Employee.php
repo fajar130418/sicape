@@ -269,4 +269,47 @@ class Employee extends BaseController
 
         return redirect()->to('/employee')->with('success', 'Pegawai berhasil dihapus.');
     }
+
+    public function contracts()
+    {
+        if (session()->get('role') !== 'admin') {
+            return redirect()->to('/dashboard');
+        }
+
+        $userModel = new \App\Models\UserModel();
+
+        // Only fetch PPPK (PPPK & PPPK Paruh Waktu)
+        $pppk = $userModel->where('user_type !=', 'PNS')
+            ->orderBy('contract_end_date', 'ASC')
+            ->findAll();
+
+        $data = [
+            'title' => 'Manajemen Kontrak PPPK',
+            'pppk' => $pppk
+        ];
+
+        return view('employee/contracts', $data);
+    }
+
+    public function massRenew()
+    {
+        if (session()->get('role') !== 'admin') {
+            return redirect()->to('/dashboard');
+        }
+
+        $employeeIds = $this->request->getPost('employee_ids');
+        $newDate = $this->request->getPost('new_contract_end_date');
+
+        if (empty($employeeIds) || empty($newDate)) {
+            return redirect()->back()->with('error', 'Data tidak lengkap.');
+        }
+
+        $userModel = new \App\Models\UserModel();
+        $userModel->whereIn('id', $employeeIds)
+            ->set(['contract_end_date' => $newDate])
+            ->update();
+
+        $count = count($employeeIds);
+        return redirect()->to('/employee/contracts')->with('success', "Berhasil memperbarui {$count} kontrak pegawai.");
+    }
 }

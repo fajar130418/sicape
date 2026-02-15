@@ -32,6 +32,8 @@ $routes->get('/employee/import', 'Import::index', ['filter' => 'auth']);
 $routes->get('/employee/import/template', 'Import::downloadTemplate', ['filter' => 'auth']);
 $routes->post('/employee/import/process', 'Import::process', ['filter' => 'auth']);
 $routes->get('/employee/export', 'Import::export', ['filter' => 'auth']);
+$routes->get('/employee/contracts', 'Employee::contracts', ['filter' => 'auth']);
+$routes->post('/employee/mass-renew', 'Employee::massRenew', ['filter' => 'auth']);
 
 // Holiday Management Routes
 $routes->get('/admin/holidays', 'Holiday::index', ['filter' => 'auth']);
