@@ -28,6 +28,10 @@ $routes->post('/employee/store', 'Employee::store', ['filter' => 'auth']);
 $routes->get('/employee/edit/(:num)', 'Employee::edit/$1', ['filter' => 'auth']);
 $routes->post('/employee/update/(:num)', 'Employee::update/$1', ['filter' => 'auth']);
 $routes->get('/employee/delete/(:num)', 'Employee::delete/$1', ['filter' => 'auth']);
+$routes->get('/employee/import', 'Import::index', ['filter' => 'auth']);
+$routes->get('/employee/import/template', 'Import::downloadTemplate', ['filter' => 'auth']);
+$routes->post('/employee/import/process', 'Import::process', ['filter' => 'auth']);
+$routes->get('/employee/export', 'Import::export', ['filter' => 'auth']);
 
 // Holiday Management Routes
 $routes->get('/admin/holidays', 'Holiday::index', ['filter' => 'auth']);

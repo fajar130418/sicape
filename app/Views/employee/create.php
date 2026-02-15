@@ -97,9 +97,15 @@
 
             <!-- ROW 7: KONTAK -->
             <div class="form-group col-span-6">
-                <label class="form-label">No. Telepon/HP (WhatsApp)</label>
+                <label class="form-label">Nomor Telepon / HP</label>
                 <input type="text" name="phone" class="form-control" value="<?= old('phone') ?>"
-                    placeholder="08xxxxxxxxxx">
+                    placeholder="Contoh: 0812...">
+            </div>
+
+            <div class="form-group col-span-6">
+                <label class="form-label">Email Aktif</label>
+                <input type="email" name="email" class="form-control" value="<?= old('email') ?>"
+                    placeholder="Contoh: nama@gmail.com">
             </div>
 
             <div class="form-group col-span-6">
@@ -124,27 +130,44 @@
             <!-- ROW 9: PANGKAT & JABATAN -->
             <div class="form-group col-span-6">
                 <label class="form-label">Pangkat / Golongan <span class="text-danger">*</span></label>
-                <select name="rank" class="form-control" required>
+                <select name="rank" id="rank" class="form-control" required>
                     <option value="">-- Pilih Pangkat/Golongan --</option>
                     <?php
                     $ranks = [
-                        "Juru Muda (I/a)",
-                        "Juru Muda Tingkat I (I/b)",
-                        "Juru (I/c)",
-                        "Juru Tingkat I (I/d)",
-                        "Pengatur Muda (II/a)",
-                        "Pengatur Muda Tingkat I (II/b)",
-                        "Pengatur (II/c)",
-                        "Pengatur Tingkat I (II/d)",
-                        "Penata Muda (III/a)",
-                        "Penata Muda Tingkat I (III/b)",
-                        "Penata (III/c)",
-                        "Penata Tingkat I (III/d)",
-                        "Pembina (IV/a)",
-                        "Pembina Tingkat I (IV/b)",
-                        "Pembina Utama Muda (IV/c)",
-                        "Pembina Utama Madya (IV/d)",
-                        "Pembina Utama (IV/e)"
+                        "Juru Muda (I.a)",
+                        "Juru Muda Tingkat I (I.b)",
+                        "Juru (I.c)",
+                        "Juru Tingkat I (I.d)",
+                        "Pengatur Muda (II.a)",
+                        "Pengatur Muda Tingkat I (II.b)",
+                        "Pengatur (II.c)",
+                        "Pengatur Tingkat I (II.d)",
+                        "Penata Muda (III.a)",
+                        "Penata Muda Tingkat I (III.b)",
+                        "Penata (III.c)",
+                        "Penata Tingkat I (III.d)",
+                        "Pembina (IV.a)",
+                        "Pembina Tingkat I (IV.b)",
+                        "Pembina Utama Muda (IV.c)",
+                        "Pembina Utama Madya (IV.d)",
+                        "Pembina Utama (IV.e)",
+                        "Golongan I",
+                        "Golongan II",
+                        "Golongan III",
+                        "Golongan IV",
+                        "Golongan V",
+                        "Golongan VI",
+                        "Golongan VII",
+                        "Golongan VIII",
+                        "Golongan IX",
+                        "Golongan X",
+                        "Golongan XI",
+                        "Golongan XII",
+                        "Golongan XIII",
+                        "Golongan XIV",
+                        "Golongan XV",
+                        "Golongan XVI",
+                        "Golongan XVII"
                     ];
                     foreach ($ranks as $r): ?>
                         <option value="<?= $r ?>" <?= old('rank') == $r ? 'selected' : '' ?>><?= $r ?></option>
@@ -314,4 +337,43 @@
         </div> <!-- End Grid -->
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const userTypeSelect = document.getElementById('user_type');
+        const rankSelect = document.getElementById('rank');
+
+        const pnsRanks = [
+            "Juru Muda (I/a)", "Juru Muda Tingkat I (I/b)", "Juru (I/c)", "Juru Tingkat I (I/d)",
+            "Pengatur Muda (II/a)", "Pengatur Muda Tingkat I (II/b)", "Pengatur (II/c)", "Pengatur Tingkat I (II/d)",
+            "Penata Muda (III/a)", "Penata Muda Tingkat I (III/b)", "Penata (III/c)", "Penata Tingkat I (III/d)",
+            "Pembina (IV/a)", "Pembina Tingkat I (IV/b)", "Pembina Utama Muda (IV/c)", "Pembina Utama Madya (IV/d)", "Pembina Utama (IV/e)"
+        ];
+
+        const pppkRanks = [
+            "Golongan I", "Golongan II", "Golongan III", "Golongan IV", "Golongan V",
+            "Golongan VI", "Golongan VII", "Golongan VIII", "Golongan IX", "Golongan X",
+            "Golongan XI", "Golongan XII", "Golongan XIII", "Golongan XIV", "Golongan XV",
+            "Golongan XVI", "Golongan XVII"
+        ];
+
+        function updateRanks() {
+            const type = userTypeSelect.value;
+            const currentRank = "<?= old('rank') ?>";
+
+            let options = '<option value="">-- Pilih Pangkat/Golongan --</option>';
+            let list = (type === 'PNS') ? pnsRanks : pppkRanks;
+
+            list.forEach(rank => {
+                const selected = (rank === currentRank) ? 'selected' : '';
+                options += `<option value="${rank}" ${selected}>${rank}</option>`;
+            });
+
+            rankSelect.innerHTML = options;
+        }
+
+        userTypeSelect.addEventListener('change', updateRanks);
+        updateRanks(); // Initial load
+    });
+</script>
 <?= $this->endSection() ?>
