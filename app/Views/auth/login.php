@@ -106,14 +106,12 @@
         }
 
         .login-logo {
-            width: 200px;
+            width: 320px;
             height: auto;
             margin-bottom: 1rem;
             /* Intensified multi-layered glow */
-            filter: 
-                drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) 
-                drop-shadow(0 0 40px rgba(255, 255, 255, 0.4))
-                drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+            filter:
+                drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.4)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
@@ -283,7 +281,7 @@
 
     <div class="login-wrapper">
         <div class="login-card">
-            <img src="<?= base_url('assets/img/logo.png') ?>" alt="SICAPE Logo" class="login-logo">
+            <img src="<?= base_url('assets/img/logo_horizontal.png') ?>" alt="SICAPE Logo" class="login-logo">
 
             <div class="login-header">
                 <h1>Selamat Datang</h1>
