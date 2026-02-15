@@ -97,13 +97,16 @@ class Employee extends BaseController
             'unit' => $this->request->getVar('unit'),
             'phone' => $this->request->getVar('phone'),
             'photo' => $photoName,
-            'photo' => $photoName,
             'is_supervisor' => $this->request->getVar('is_supervisor') ? 1 : 0,
             'is_head_of_agency' => $this->request->getVar('is_head_of_agency') ? 1 : 0,
             'supervisor_id' => $this->request->getVar('supervisor_id') ? $this->request->getVar('supervisor_id') : null,
             'leave_balance_n' => $this->request->getVar('leave_balance_n') ?: 12,
             'leave_balance_n1' => $this->request->getVar('leave_balance_n1') ?: 0,
             'leave_balance_n2' => $this->request->getVar('leave_balance_n2') ?: 0,
+            'mkg_additional_years' => $this->request->getVar('mkg_additional_years') ?: 0,
+            'mkg_additional_months' => $this->request->getVar('mkg_additional_months') ?: 0,
+            'mkg_adjustment_years' => $this->request->getVar('mkg_adjustment_years') ?: 0,
+            'mkg_adjustment_months' => $this->request->getVar('mkg_adjustment_months') ?: 0,
         ];
 
         $userModel->save($data);
@@ -203,13 +206,16 @@ class Employee extends BaseController
             'unit' => $this->request->getVar('unit'),
             'phone' => $this->request->getVar('phone'),
             'photo' => $photoName,
-            'photo' => $photoName,
             'is_supervisor' => $this->request->getVar('is_supervisor') ? 1 : 0,
             'is_head_of_agency' => $this->request->getVar('is_head_of_agency') ? 1 : 0,
             'supervisor_id' => $this->request->getVar('supervisor_id') ? $this->request->getVar('supervisor_id') : null,
             'leave_balance_n' => $this->request->getVar('leave_balance_n') ?: 12,
             'leave_balance_n1' => $this->request->getVar('leave_balance_n1') ?: 0,
             'leave_balance_n2' => $this->request->getVar('leave_balance_n2') ?: 0,
+            'mkg_additional_years' => $this->request->getVar('mkg_additional_years') ?: 0,
+            'mkg_additional_months' => $this->request->getVar('mkg_additional_months') ?: 0,
+            'mkg_adjustment_years' => $this->request->getVar('mkg_adjustment_years') ?: 0,
+            'mkg_adjustment_months' => $this->request->getVar('mkg_adjustment_months') ?: 0,
         ];
 
         // Update password only if provided

@@ -241,6 +241,38 @@
                 <div class="form-hint">Maksimal 6 hari (Aturan ASN).</div>
             </div>
 
+            <!-- HEADER: PENYESUAIAN MASA KERJA -->
+            <div class="section-separator" style="margin-top: 1.5rem;">
+                <i class="fas fa-business-time"></i>
+                <h3>Penyesuaian Masa Kerja (MKG)</h3>
+            </div>
+
+            <div class="form-group col-span-6">
+                <label class="form-label">Masa Kerja Tambahan (PMK) - Tahun</label>
+                <input type="number" name="mkg_additional_years" class="form-control"
+                    value="<?= old('mkg_additional_years', 0) ?>" min="0">
+                <div class="form-hint">Pengakuan masa kerja sebelumnya (Honorer/Swasta).</div>
+            </div>
+
+            <div class="form-group col-span-6">
+                <label class="form-label">Masa Kerja Tambahan (PMK) - Bulan</label>
+                <input type="number" name="mkg_additional_months" class="form-control"
+                    value="<?= old('mkg_additional_months', 0) ?>" min="0" max="11">
+            </div>
+
+            <div class="form-group col-span-6">
+                <label class="form-label">Penyesuaian Gelar/Ijazah - Tahun</label>
+                <input type="number" name="mkg_adjustment_years" class="form-control"
+                    value="<?= old('mkg_adjustment_years', 0) ?>">
+                <div class="form-hint">Gunakan angka negatif (misal: -2) untuk pengurangan.</div>
+            </div>
+
+            <div class="form-group col-span-6">
+                <label class="form-label">Penyesuaian Gelar/Ijazah - Bulan</label>
+                <input type="number" name="mkg_adjustment_months" class="form-control"
+                    value="<?= old('mkg_adjustment_months', 0) ?>">
+            </div>
+
             <!-- SUBMIT BUTTON -->
             <div class="col-span-12"
                 style="margin-top: 1rem; padding-top: 1.5rem; border-top: 1px solid #f3f4f6; text-align: right;">

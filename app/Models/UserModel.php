@@ -39,7 +39,11 @@ class UserModel extends Model
         'is_head_of_agency',
         'leave_balance_n',
         'leave_balance_n1',
-        'leave_balance_n2'
+        'leave_balance_n2',
+        'mkg_additional_years',
+        'mkg_additional_months',
+        'mkg_adjustment_years',
+        'mkg_adjustment_months'
     ];
 
     protected bool $allowEmptyInserts = false;
@@ -139,5 +143,50 @@ class UserModel extends Model
     {
         $details = $this->getDetailedRemainingLeave($userId, $year);
         return $details['total'];
+    }
+
+    /**
+     * Menghitung Masa Kerja Golongan (MKG) dengan mempertimbangkan PMK dan Penyesuaian Gelar.
+     */
+    public function calculateSeniority($userId, $atDate = null)
+    {
+        $user = $this->find($userId);
+        if (!$user) {
+            return ['years' => 0, 'months' => 0];
+        }
+
+        $atDate = $atDate ? new \DateTime($atDate) : new \DateTime();
+        $joinDate = new \DateTime($user['join_date']);
+
+        // 1. Hitung masa kerja dasar dari TMT (join_date)
+        $diff = $joinDate->diff($atDate);
+        $baseYears = $diff->y;
+        $baseMonths = $diff->m;
+
+        // 2. Tambahkan Masa Kerja Tambahan (PMK)
+        $additionalYears = (int) ($user['mkg_additional_years'] ?? 0);
+        $additionalMonths = (int) ($user['mkg_additional_months'] ?? 0);
+
+        // 3. Tambahkan/Kurangi Penyesuaian (Gelar/Ijazah)
+        $adjustmentYears = (int) ($user['mkg_adjustment_years'] ?? 0);
+        $adjustmentMonths = (int) ($user['mkg_adjustment_months'] ?? 0);
+
+        // Total
+        $totalMonths = ($baseYears * 12 + $baseMonths) +
+            ($additionalYears * 12 + $additionalMonths) +
+            ($adjustmentYears * 12 + $adjustmentMonths);
+
+        if ($totalMonths < 0) {
+            $totalMonths = 0;
+        }
+
+        $finalYears = floor($totalMonths / 12);
+        $finalMonths = $totalMonths % 12;
+
+        return [
+            'years' => (int) $finalYears,
+            'months' => (int) $finalMonths,
+            'total_months' => $totalMonths
+        ];
     }
 }

@@ -100,9 +100,8 @@ class Leave extends BaseController
         }
 
         // Specific Rules Validation
-        $joinDateObj = new \DateTime($joinDate);
-        $today = new \DateTime();
-        $yearsOfService = $joinDateObj->diff($today)->y;
+        $seniority = $userModel->calculateSeniority($userId);
+        $yearsOfService = $seniority['years'];
 
         // 1. Cuti Tahunan Rules
         if ($leaveType['name'] == 'Cuti Tahunan') {
@@ -169,6 +168,7 @@ class Leave extends BaseController
             // Once taken in a 5-year period, the "sisa hak" (remaining balance) for that period is forfeited.
             $milestoneIndex = floor($yearsOfService / 5);
             $lastMilestoneYears = $milestoneIndex * 5;
+            $joinDateObj = new \DateTime($joinDate);
             $milestoneDate = clone $joinDateObj;
             $milestoneDate->modify("+$lastMilestoneYears years");
 
@@ -252,14 +252,12 @@ class Leave extends BaseController
         // 5. CLTN Rules
         if ($leaveType['name'] == 'Cuti di Luar Tanggungan Negara') {
             // Only PNS can apply for CLTN
-            if ($user['user_type'] != 'PNS') {
+            if ($targetUser['user_type'] != 'PNS') {
                 return redirect()->back()->withInput()->with('errors', ['Cuti di Luar Tanggungan Negara (CLTN) hanya dapat diajukan oleh pegawai berstatus PNS.']);
             }
 
             // Must have worked for at least 5 years
-            $joinDate = $user['join_date'] ?? date('Y-m-d');
-            $workingYears = date_diff(date_create($joinDate), date_create('today'))->y;
-            if ($workingYears < 5) {
+            if ($yearsOfService < 5) {
                 return redirect()->back()->withInput()->with('errors', ['Syarat pengajuan CLTN adalah masa kerja minimal 5 tahun terus-menerus sebagai PNS.']);
             }
 
@@ -386,10 +384,8 @@ class Leave extends BaseController
         }
 
         // Calculate tenure text
-        $joinDate = new \DateTime($request['join_date']);
-        $today = new \DateTime();
-        $diff = $joinDate->diff($today);
-        $tenure = $diff->y . " Tahun " . $diff->m . " Bulan";
+        $seniority = $userModel->calculateSeniority($request['user_id']);
+        $tenure = $seniority['years'] . " Tahun " . $seniority['months'] . " Bulan";
 
         // Fetch Head of Agency
         $headOfAgency = $model->db->table('users')->where('is_head_of_agency', 1)->get()->getRowArray();
