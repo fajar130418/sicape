@@ -1,31 +1,111 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <title>Formulir Cuti</title>
     <style>
-        @page { margin: 15px 25px; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 9pt; line-height: 1.1; }
-        .header { margin-bottom: 15px; font-size: 9pt; }
-        .header table { border: none; width: 100%; margin-bottom: 5px; }
-        .header td { border: none; padding: 0; vertical-align: top; }
-        .header p { margin: 2px 0; line-height: 1.3; }
-        .title { text-align: center; font-weight: bold; margin: 8px 0; text-transform: uppercase; font-size: 11pt; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 3px; }
-        th, td { border: 1px solid black; padding: 2px 4px; vertical-align: top; }
-        .no-border { border: none; }
-        .section-title { font-weight: bold; background-color: #f0f0f0; font-size: 9pt; }
-        .check-box { width: 10px; height: 10px; border: 1px solid black; display: inline-block; text-align: center; line-height: 8px; font-size: 8px; margin-right: 3px; }
-        .checked { content: "✔"; }
-        .signature-box { height: 50px; }
-        .center { text-align: center; }
-        
+        @page {
+            margin: 15px 25px;
+        }
+
+        body {
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 9pt;
+            line-height: 1.1;
+        }
+
+        .header {
+            margin-bottom: 15px;
+            font-size: 9pt;
+        }
+
+        .header table {
+            border: none;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .header td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
+        }
+
+        .header p {
+            margin: 2px 0;
+            line-height: 1.3;
+        }
+
+        .title {
+            text-align: center;
+            font-weight: bold;
+            margin: 8px 0;
+            text-transform: uppercase;
+            font-size: 11pt;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 3px;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 2px 4px;
+            vertical-align: top;
+        }
+
+        .no-border {
+            border: none;
+        }
+
+        .section-title {
+            font-weight: bold;
+            background-color: #f0f0f0;
+            font-size: 9pt;
+        }
+
+        .check-box {
+            width: 10px;
+            height: 10px;
+            border: 1px solid black;
+            display: inline-block;
+            text-align: center;
+            line-height: 8px;
+            font-size: 8px;
+            margin-right: 3px;
+        }
+
+        .checked {
+            content: "✔";
+        }
+
+        .signature-box {
+            height: 50px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
         /* Layout Helpers */
-        .col-half { width: 50%; }
-        .col-label { width: 25%; }
-        .col-val { width: 25%; }
+        .col-half {
+            width: 50%;
+        }
+
+        .col-label {
+            width: 25%;
+        }
+
+        .col-val {
+            width: 25%;
+        }
     </style>
 </head>
+
 <body>
     <div class="header">
         <table>
@@ -112,10 +192,10 @@
     </table>
 
     <!-- IV. LAMANYA CUTI -->
-    <?php 
-        $start = new DateTime($request['start_date']);
-        $end = new DateTime($request['end_date']);
-        $days = $start->diff($end)->days + 1;
+    <?php
+    $start = new DateTime($request['start_date']);
+    $end = new DateTime($request['end_date']);
+    $days = $start->diff($end)->days + 1;
     ?>
     <table>
         <tr>
@@ -212,7 +292,10 @@
                     <strong><?= $manualSignature['supervisor']['name'] ?></strong><br>
                     NIP. <?= $manualSignature['supervisor']['nip'] ?>
                 <?php else: ?>
-                    Atasan Langsung,<br><br><br><br>
+                    <?php
+                    $signerPrefix = ($request['supervisor_sign_as'] ?? 'Definitif') != 'Definitif' ? $request['supervisor_sign_as'] . ' ' : '';
+                    ?>
+                    <?= $signerPrefix ?>Atasan Langsung,<br><br><br><br>
                     <strong><?= $request['supervisor_name'] ?? '(Nama Atasan)' ?></strong><br>
                     NIP. <?= $request['supervisor_nip'] ?? '...' ?>
                 <?php endif; ?>
@@ -245,7 +328,10 @@
                     <strong><?= $manualSignature['official']['name'] ?></strong><br>
                     <?= $manualSignature['official']['nip'] ? 'NIP. ' . $manualSignature['official']['nip'] : '' ?>
                 <?php else: ?>
-                    Kepala Dinas,<br><br><br><br>
+                    <?php
+                    $adminPrefix = ($request['admin_sign_as'] ?? 'Definitif') != 'Definitif' ? $request['admin_sign_as'] . ' ' : '';
+                    ?>
+                    <?= $adminPrefix ?>Kepala Dinas,<br><br><br><br>
                     <strong><?= strtoupper($headOfAgency['name'] ?? '(BELUM ADA KEPALA DINAS)') ?></strong><br>
                     NIP. <?= $headOfAgency['nip'] ?? '...' ?>
                 <?php endif; ?>
@@ -262,4 +348,5 @@
     </div>
 
 </body>
+
 </html>

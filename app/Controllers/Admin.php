@@ -15,13 +15,13 @@ class Admin extends BaseController
         }
 
         $requestModel = new \App\Models\LeaveRequestModel();
-        
+
         // Fetch pending requests with user and type info
         $requests = $requestModel->select('leave_requests.*, users.name as user_name, users.nip, leave_types.name as type_name, users.is_head_of_agency')
-                                 ->join('users', 'users.id = leave_requests.user_id')
-                                 ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
-                                 ->orderBy('leave_requests.created_at', 'ASC') // Oldest first
-                                 ->findAll();
+            ->join('users', 'users.id = leave_requests.user_id')
+            ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+            ->orderBy('leave_requests.created_at', 'ASC') // Oldest first
+            ->findAll();
 
         $data = [
             'title' => 'Admin Panel',
@@ -50,7 +50,8 @@ class Admin extends BaseController
 
         $updateData = [
             'status' => $status,
-            'admin_note' => $this->request->getVar('admin_note') ?? ($status == 'approved' ? 'Disetujui' : 'Ditolak')
+            'admin_note' => $this->request->getVar('admin_note') ?? ($status == 'approved' ? 'Disetujui' : 'Ditolak'),
+            'admin_sign_as' => $this->request->getVar('admin_sign_as') ?: 'Definitif'
         ];
 
         $model->update($id, $updateData);
@@ -67,44 +68,44 @@ class Admin extends BaseController
         $db = \Config\Database::connect();
         $requestModel = new \App\Models\LeaveRequestModel();
         $holidayModel = new \App\Models\HolidayModel();
-        
+
         // Fetch all holidays
         $holidays = $holidayModel->findColumn('date') ?? [];
-        
+
         // Fetch all leave requests
         $allRequests = $requestModel->findAll();
-        
+
         $updated = 0;
-        
+
         foreach ($allRequests as $request) {
             $start = new \DateTime($request['start_date']);
             $end = new \DateTime($request['end_date']);
-            
+
             $duration = 0;
             $period = new \DatePeriod($start, new \DateInterval('P1D'), $end->modify('+1 day'));
-            
+
             foreach ($period as $dt) {
                 $currDate = $dt->format('Y-m-d');
                 $dayOfWeek = $dt->format('N'); // 1 (Mon) - 7 (Sun)
-                
+
                 // Skip Weekend (6=Sat, 7=Sun)
                 if ($dayOfWeek >= 6) {
                     continue;
                 }
-                
+
                 // Skip Holiday
                 if (in_array($currDate, $holidays)) {
                     continue;
                 }
-                
+
                 $duration++;
             }
-            
+
             // Update the duration
             $requestModel->update($request['id'], ['duration' => $duration]);
             $updated++;
         }
-        
+
         return redirect()->to('/admin')->with('success', "Berhasil menghitung ulang durasi untuk {$updated} pengajuan cuti.");
     }
 }
