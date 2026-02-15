@@ -29,6 +29,7 @@
                     <th style="text-align: center;">Jatah N</th>
                     <th style="text-align: center; background: #f3f4f6; font-weight: 700;">TOTAL SISA</th>
                     <th style="text-align: center;">Status CLTN</th>
+                    <th style="text-align: center;">Status Cuti Besar</th>
                 </tr>
             </thead>
             <tbody>
@@ -36,6 +37,9 @@
                 $no = 1;
                 foreach ($users as $user):
                     $totalQuota = $user['leave_balance_n'] + $user['leave_balance_n1'] + $user['leave_balance_n2'];
+                    $workingYears = $user['years_of_service'] ?? 0;
+                    $workingMonths = $user['months_of_service'] ?? 0;
+                    $tenureText = "Masa Kerja: $workingYears Thn $workingMonths Bln";
                     ?>
                     <tr>
                         <td>
@@ -46,7 +50,8 @@
                                 <?= $user['name'] ?>
                             </div>
                             <div style="color: #6b7280; font-size: 0.75rem;">
-                                <?= $user['nip'] ?>
+                                <?= $user['nip'] ?> | <span title="<?= $tenureText ?>"><?= $workingYears ?>th
+                                    <?= $workingMonths ?>bln</span>
                             </div>
                         </td>
                         <td
@@ -64,13 +69,24 @@
                             <?= $totalQuota ?> hari
                         </td>
                         <td style="text-align: center;">
-                            <?php
-                            $joinDate = $user['join_date'] ?? date('Y-m-d');
-                            $workingYears = date_diff(date_create($joinDate), date_create('today'))->y;
-                            if ($user['user_type'] == 'PNS' && $workingYears >= 5): ?>
+                            <?php if (($user['user_type'] ?? 'PNS') == 'PNS' && $workingYears >= 5): ?>
                                 <span class="badge badge-success">Berhak</span>
                             <?php else: ?>
-                                <span class="badge badge-danger" title="Masa kerja atau tipe tidak sesuai">Belum Berhak</span>
+                                <span class="badge badge-danger" title="<?= $tenureText ?>">Belum Berhak</span>
+                            <?php endif; ?>
+                        </td>
+                        <td style="text-align: center;">
+                            <?php
+                            $uType = $user['user_type'] ?? 'PNS';
+                            if ($uType == 'PNS'): ?>
+                                <?php if ($workingYears >= 5): ?>
+                                    <span class="badge badge-success">Berhak</span>
+                                <?php else: ?>
+                                    <span class="badge badge-danger" title="<?= $tenureText ?>">Belum Berhak</span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span class="badge badge-secondary" style="background-color: #9ca3af; color: white;"
+                                    title="Cuti Besar hanya untuk PNS">Tidak Bisa Diambil</span>
                             <?php endif; ?>
                         </td>
                     </tr>

@@ -167,24 +167,22 @@ class Leave extends BaseController
 
         // Specific Rules Validation (Skip for Cuti Khusus)
         if (!$isSpecialLeave) {
-            // 2. Cuti Besar Rules
             if ($leaveType['name'] == 'Cuti Besar') {
-                // Check User Type
+                // 1. Check User Type (Only PNS)
                 $userType = $targetUser['user_type'] ?? 'PNS';
                 if ($userType !== 'PNS') {
-                    return redirect()->back()->withInput()->with('errors', ['Cuti Besar hanya diperuntukkan bagi PNS. PPPK dan PPPK Paruh Waktu tidak berhak mengajukan Cuti Besar.']);
+                    return redirect()->back()->withInput()->with('errors', ['Cuti Besar hanya diperuntukkan bagi Pegawai Negeri Sipil (PNS).']);
                 }
 
+                // 2. Check Seniority (Haji Exception applies)
                 $leaveCategory = $request->getVar('category');
-
-                // Haji Exception: PNS yang belum mencapai 5 tahun boleh mengambil cuti besar untuk ibadah keagamaan (Haji Pertama).
                 $isHaji = ($leaveCategory == 'Ibadah Keagamaan (Haji Pertama)');
 
                 if ($yearsOfService < 5 && !$isHaji) {
                     return redirect()->back()->withInput()->with('errors', ['Anda belum berhak mengambil Cuti Besar (Masa kerja < 5 tahun). Kecuali untuk Ibadah Keagamaan (Haji Pertama).']);
                 }
 
-                // Milestone-based Forfeiture Check: 
+                // Milestone-based Forfeiture Check:
                 // Once taken in a 5-year period, the "sisa hak" (remaining balance) for that period is forfeited.
                 $milestoneIndex = floor($yearsOfService / 5);
                 $lastMilestoneYears = $milestoneIndex * 5;

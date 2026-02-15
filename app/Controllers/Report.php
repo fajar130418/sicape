@@ -119,6 +119,12 @@ class Report extends BaseController
 
         $users = $this->userModel->orderBy('name', 'ASC')->findAll();
 
+        foreach ($users as &$user) {
+            $seniority = $this->userModel->calculateSeniority($user['id']);
+            $user['years_of_service'] = $seniority['years'];
+            $user['months_of_service'] = $seniority['months'];
+        }
+
         $data = [
             'title' => 'Status Sisa Jatah Cuti Pegawai',
             'users' => $users
