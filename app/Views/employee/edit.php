@@ -76,8 +76,15 @@
 
             <div class="form-group col-span-6">
                 <label class="form-label">Pendidikan Terakhir <span class="text-danger">*</span></label>
-                <input type="text" name="education" class="form-control"
-                    value="<?= old('education', $employee['education']) ?>" required>
+                <select name="education" class="form-control" required>
+                    <option value="">-- Pilih Pendidikan --</option>
+                    <?php
+                    $educations = ["SD / Sederajat", "SMP / Sederajat", "SMA / Sederajat", "DI", "DII", "DIII", "DIV / S1", "S2", "S3"];
+                    foreach ($educations as $edu): ?>
+                        <option value="<?= $edu ?>" <?= old('education', $employee['education']) == $edu ? 'selected' : '' ?>>
+                            <?= $edu ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <!-- ROW 6: ALAMAT -->
@@ -137,8 +144,33 @@
             <!-- ROW 9: PANGKAT & JABATAN -->
             <div class="form-group col-span-6">
                 <label class="form-label">Pangkat / Golongan <span class="text-danger">*</span></label>
-                <input type="text" name="rank" class="form-control" value="<?= old('rank', $employee['rank']) ?>"
-                    required>
+                <select name="rank" class="form-control" required>
+                    <option value="">-- Pilih Pangkat/Golongan --</option>
+                    <?php
+                    $ranks = [
+                        "Juru Muda (I/a)",
+                        "Juru Muda Tingkat I (I/b)",
+                        "Juru (I/c)",
+                        "Juru Tingkat I (I/d)",
+                        "Pengatur Muda (II/a)",
+                        "Pengatur Muda Tingkat I (II/b)",
+                        "Pengatur (II/c)",
+                        "Pengatur Tingkat I (II/d)",
+                        "Penata Muda (III/a)",
+                        "Penata Muda Tingkat I (III/b)",
+                        "Penata (III/c)",
+                        "Penata Tingkat I (III/d)",
+                        "Pembina (IV/a)",
+                        "Pembina Tingkat I (IV/b)",
+                        "Pembina Utama Muda (IV/c)",
+                        "Pembina Utama Madya (IV/d)",
+                        "Pembina Utama (IV/e)"
+                    ];
+                    foreach ($ranks as $r): ?>
+                        <option value="<?= $r ?>" <?= old('rank', $employee['rank']) == $r ? 'selected' : '' ?>><?= $r ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
 
             <div class="form-group col-span-6">
