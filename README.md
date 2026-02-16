@@ -48,8 +48,7 @@ Aplikasi manajemen cuti ASN berbasis web yang mendukung akumulasi cuti 18-24 har
    Jalankan perintah berikut untuk membuat tabel dan mengisi data awal:
    ```bash
    php spark migrate
-   php spark db:seed LeaveTypeSeeder
-   php spark db:seed UserSeeder
+   php spark db:seed LeaveSeeder
    ```
 
 5. **Jalankan Aplikasi**
