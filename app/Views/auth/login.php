@@ -106,9 +106,11 @@
         }
 
         .login-logo {
-            width: 320px;
+            max-width: 100%;
             height: auto;
-            margin-bottom: 1rem;
+            width: auto;
+            display: block;
+            margin: 0 auto 1.5rem;
             /* Intensified multi-layered glow */
             filter:
                 drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.4)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));

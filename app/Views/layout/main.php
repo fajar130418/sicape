@@ -16,6 +16,7 @@
             --text-color: #1f2937;
             --glass-bg: rgba(255, 255, 255, 0.9);
             --glass-border: 1px solid rgba(255, 255, 255, 0.3);
+            --mobile-nav-height: 60px;
         }
 
         body {
@@ -25,6 +26,50 @@
             display: flex;
             min-height: 100vh;
             color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        /* Mobile Navbar */
+        .mobile-navbar {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--mobile-nav-height);
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            padding: 0 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mobile-logo {
+            height: 32px;
+            width: auto;
+        }
+
+        .mobile-brand h2 {
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 800;
+            color: var(--primary-color);
         }
 
         /* Sidebar */
@@ -38,7 +83,17 @@
             border-right: 1px solid #e5e7eb;
             display: flex;
             flex-direction: column;
-            z-index: 100;
+            z-index: 1100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1050;
         }
 
         .sidebar-header {
@@ -49,6 +104,19 @@
             border-bottom: 1px solid #f3f4f6;
             text-align: center;
             gap: 0.75rem;
+            position: relative;
+        }
+
+        .close-sidebar {
+            display: none;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #6b7280;
+            cursor: pointer;
         }
 
         .sidebar-logo {
@@ -156,6 +224,7 @@
             padding: 2rem;
             flex-grow: 1;
             width: calc(100% - var(--sidebar-width));
+            transition: all 0.3s ease;
         }
 
         .page-header {
@@ -195,6 +264,57 @@
             font-size: 1.1rem;
             font-weight: 600;
             margin: 0;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .mobile-navbar {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar.active+.sidebar-overlay {
+                display: block;
+            }
+
+            .close-sidebar {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 1rem;
+                padding-top: calc(var(--mobile-nav-height) + 1.5rem);
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
         /* Buttons */
@@ -276,11 +396,13 @@
         /* Table */
         .table-responsive {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
 
         th,
@@ -308,6 +430,7 @@
             border-radius: 9999px;
             font-size: 0.75rem;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .badge-success {
@@ -474,8 +597,24 @@
 </head>
 
 <body>
-    <aside class="sidebar">
+    <nav class="mobile-navbar">
+        <button class="menu-toggle" id="openSidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="mobile-brand">
+            <img src="<?= base_url('assets/img/logo.png') ?>" alt="Logo" class="mobile-logo">
+            <h2>SICAPE</h2>
+        </div>
+        <div style="width: 40px;"></div> <!-- Spacer -->
+    </nav>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
+            <button class="close-sidebar" id="closeSidebar">
+                <i class="fas fa-times"></i>
+            </button>
             <img src="<?= base_url('assets/img/logo.png') ?>" alt="Logo" class="sidebar-logo">
             <div class="app-name-container">
                 <h2>SICAPE</h2>
@@ -572,6 +711,33 @@
     <main class="main-content">
         <?= $this->renderSection('content') ?>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const openSidebar = document.getElementById('openSidebar');
+            const closeSidebar = document.getElementById('closeSidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+            }
+
+            openSidebar.addEventListener('click', toggleSidebar);
+            closeSidebar.addEventListener('click', toggleSidebar);
+            sidebarOverlay.addEventListener('click', toggleSidebar);
+
+            // Close sidebar on menu click (mobile)
+            const menuLinks = sidebar.querySelectorAll('.sidebar-menu a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 1024) {
+                        sidebar.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -11,21 +11,21 @@
 </div>
 
 <?php if (session()->get('role') === 'admin' && $expiringPPPKCount > 0): ?>
-    <div
-        style="background: #fff; border-left: 4px solid #ef4444; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-        <div style="display: flex; align-items: center; gap: 1rem;">
+    <div class="card"
+        style="border-left: 4px solid #ef4444; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 250px;">
             <div
-                style="background: #fee2e2; color: #ef4444; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                style="background: #fee2e2; color: #ef4444; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
             <div>
-                <h4 style="margin: 0; color: #111827; font-size: 1rem;">Perhatian: Kontrak Pegawai Akan Berakhir</h4>
+                <h4 style="margin: 0; color: #111827; font-size: 1rem;">Perhatian: Kontrak Pegawai</h4>
                 <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Ada <strong><?= $expiringPPPKCount ?> pegawai
-                        PPPK</strong> yang kontraknya akan berakhir dalam waktu kurang dari 1 bulan.</p>
+                        PPPK</strong> yang kontraknya segera berakhir.</p>
             </div>
         </div>
         <a href="<?= base_url('employee/contracts') ?>" class="btn btn-primary btn-sm"
-            style="background-color: #ef4444;">Kelola Kontrak</a>
+            style="background-color: #ef4444; white-space: nowrap;">Kelola Kontrak</a>
     </div>
 <?php endif; ?>
 
