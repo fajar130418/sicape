@@ -9,6 +9,11 @@ $routes->get('/', 'Auth::index');
 $routes->get('/login', 'Auth::index');
 $routes->post('/auth/login', 'Auth::login');
 $routes->get('/auth/login', 'Auth::index');
+$routes->options('(:any)', static function () {
+    $response = service('response');
+    $response->setStatusCode(200);
+    return $response;
+});
 $routes->get('/logout', 'Auth::logout');
 $routes->get('/dashboard', 'Dashboard::index', ['filter' => 'auth']);
 $routes->get('/leave/create', 'Leave::create', ['filter' => 'auth']);
@@ -52,3 +57,20 @@ $routes->get('/report', 'Report::index', ['filter' => 'auth']);
 $routes->get('/report/recap', 'Report::recap', ['filter' => 'auth']);
 $routes->get('/report/details', 'Report::details', ['filter' => 'auth']);
 $routes->get('/report/quota', 'Report::quota', ['filter' => 'auth']);
+$routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
+    $routes->post('login', 'Auth::login');
+    $routes->post('logout', 'Auth::logout');
+
+    $routes->group('', ['filter' => 'apiAuth'], function ($routes) {
+        $routes->get('dashboard', 'Dashboard::index');
+
+        // Leave
+        $routes->get('leave/history', 'Leave::index');
+        $routes->get('leave/types', 'Leave::types');
+        $routes->post('leave/store', 'Leave::store');
+
+        // Approval
+        $routes->get('approval', 'Approval::index');
+        $routes->post('approval/process/(:num)', 'Approval::process/$1');
+    });
+});
