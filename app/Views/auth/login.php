@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - SICAPE Kabupaten Seruyan</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
@@ -201,6 +202,10 @@
             margin-top: 1rem;
             box-shadow: 0 10px 15px -3px var(--primary-glow);
             font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .btn-login:hover {
@@ -322,12 +327,13 @@
                             placeholder="Masukkan Kata Sandi" required>
                     </div>
                 </div>
-                <button type="submit" class="btn-login">Masuk ke Sistem</button>
+                <button type="submit" class="btn-login">
+                    Login <i class="fas fa-sign-in-alt"></i>
+                </button>
             </form>
 
             <div class="footer">
-                <p>&copy; 2026 Disperpusip Kabupaten Seruyan</p>
-                <div class="system-badge">v2.0.0 • Secure Access</div>
+                <p>&copy; 2026 Dinas Perpustakaan dan Kearsipan Kabupaten Seruyan</p>
             </div>
         </div>
     </div>
