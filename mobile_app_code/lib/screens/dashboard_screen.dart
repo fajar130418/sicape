@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import 'login_screen.dart';
 import 'leave_form_screen.dart';
 import 'approval_screen.dart';
+import 'profile_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -71,222 +72,444 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final recentLeaves =
         _dashboardData?['recent_leaves'] as List<dynamic>? ?? [];
 
-    // Check if Supervisor (Role 3 usually, or check is_supervisor if avail)
-    // For simplicity, assuming validation handles access, we just show button if user has role
     bool isSupervisor = _user?['role'] == 'supervisor' ||
         _user?['role'] == 'admin' ||
         _user?['role'] == 'head';
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        actions: [
-          IconButton(onPressed: _logout, icon: const Icon(Icons.logout)),
-        ],
-      ),
+      backgroundColor: Colors.grey.shade100,
       body: RefreshIndicator(
         onRefresh: _loadData,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // User Card
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.blue.shade100,
-                        backgroundImage: _user?['photo'] != null
-                            ? NetworkImage(_user!['photo'])
-                            : null,
-                        child: _user?['photo'] == null
-                            ? const Icon(Icons.person, size: 30)
-                            : null,
-                      ),
-                      const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(_user?['name'] ?? 'User',
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold)),
-                          Text('NIP: ${_user?['nip'] ?? '-'}',
-                              style: TextStyle(color: Colors.grey[600])),
-                          Text(
-                              _user?['role']?.toString().toUpperCase() ??
-                                  'STAFF',
-                              style: const TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ],
-                  ),
+          slivers: [
+            SliverAppBar(
+              expandedHeight: 220.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: Colors.indigo.shade600,
+              actions: [
+                IconButton(
+                  onPressed: _logout,
+                  icon: const Icon(Icons.logout_rounded, color: Colors.white),
                 ),
-              ),
-              const SizedBox(height: 20),
-
-              // Menu Grid
-              GridView.count(
-                shrinkWrap: true,
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildMenuCard(
-                    icon: Icons.add_circle,
-                    label: 'Ajukan Cuti',
-                    color: Colors.blue,
-                    onTap: () => Navigator.push(
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                background: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.indigo.shade800,
+                            Colors.indigo.shade500,
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: -50,
+                      right: -50,
+                      child: CircleAvatar(
+                        radius: 100,
+                        backgroundColor: Colors.white.withOpacity(0.1),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -80,
+                      left: -50,
+                      child: CircleAvatar(
+                        radius: 120,
+                        backgroundColor: Colors.white.withOpacity(0.05),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 40,
+                      left: 20,
+                      right: 20,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => LeaveFormScreen()))
-                        .then((_) => _loadData()),
-                  ),
-                  if (isSupervisor)
-                    _buildMenuCard(
-                      icon: Icons.approval,
-                      label: 'Persetujuan',
-                      color: Colors.orange,
-                      onTap: () => Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => ApprovalScreen())),
+                                builder: (_) => const ProfileScreen()),
+                          ).then((_) => _loadData());
+                        },
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border:
+                                    Border.all(color: Colors.white, width: 3),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 35,
+                                backgroundColor: Colors.indigo.shade100,
+                                backgroundImage: _user?['photo'] != null
+                                    ? NetworkImage(_user!['photo'])
+                                    : null,
+                                child: _user?['photo'] == null
+                                    ? Icon(Icons.person_rounded,
+                                        size: 40, color: Colors.indigo.shade500)
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _user?['name'] ?? 'User Name',
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      _user?['role']
+                                              ?.toString()
+                                              .toUpperCase() ??
+                                          'STAFF',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  _buildMenuCard(
-                    icon: Icons.history,
-                    label: 'Riwayat Cuti',
-                    color: Colors.green,
-                    onTap: () {/* TODO: History Screen */},
-                  ),
-                  _buildMenuCard(
-                    icon: Icons.settings,
-                    label: 'Pengaturan',
-                    color: Colors.grey,
-                    onTap: () {},
-                  ),
-                ],
+                  ],
+                ),
               ),
-
-              const SizedBox(height: 20),
-
-              // Leave Balance
-              const Text('Sisa Cuti Tahunan',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildStatCard('Total', '$totalBalance', Colors.blue),
-                  _buildStatCard('Tahun N', '$n', Colors.green),
-                  _buildStatCard('Tahun N-1', '$n1', Colors.orange),
-                  _buildStatCard('Tahun N-2', '$n2', Colors.red),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Recent Activity
-              const Text('Riwayat Terakhir',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: recentLeaves.length,
-                itemBuilder: (context, index) {
-                  final item = recentLeaves[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      leading: const Icon(Icons.date_range, color: Colors.blue),
-                      title: Text(item['leave_type_name']),
-                      subtitle: Text(
-                          '${item['start_date']} slessai ${item['end_date']}'),
-                      trailing: _buildStatusChip(item['status']),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Menu Utama',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.indigo.shade900,
+                      ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 16),
+                    GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.1,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildModernMenuCard(
+                          icon: Icons.edit_document,
+                          label: 'Ajukan Cuti',
+                          color: Colors.blue.shade600,
+                          bgColor: Colors.blue.shade50,
+                          onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => LeaveFormScreen()))
+                              .then((_) => _loadData()),
+                        ),
+                        if (isSupervisor)
+                          _buildModernMenuCard(
+                            icon: Icons.verified_rounded,
+                            label: 'Persetujuan',
+                            color: Colors.orange.shade600,
+                            bgColor: Colors.orange.shade50,
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => ApprovalScreen())),
+                          ),
+                        _buildModernMenuCard(
+                          icon: Icons.history_rounded,
+                          label: 'Riwayat Cuti',
+                          color: Colors.teal.shade600,
+                          bgColor: Colors.teal.shade50,
+                          onTap: () {/* TODO: History Screen */},
+                        ),
+                        _buildModernMenuCard(
+                          icon: Icons.settings_rounded,
+                          label: 'Pengaturan',
+                          color: Colors.blueGrey.shade600,
+                          bgColor: Colors.blueGrey.shade50,
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      'Info Sisa Cuti',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.indigo.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        _buildModernStatCard('Total Cuti', '$totalBalance',
+                            Colors.blue.shade600, Icons.pie_chart_rounded),
+                        const SizedBox(width: 12),
+                        _buildModernStatCard('Tahun N', '$n',
+                            Colors.teal.shade500, Icons.filter_1_rounded),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        _buildModernStatCard('Tahun N-1', '$n1',
+                            Colors.orange.shade500, Icons.filter_2_rounded),
+                        const SizedBox(width: 12),
+                        _buildModernStatCard('Tahun N-2', '$n2',
+                            Colors.red.shade400, Icons.filter_3_rounded),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      'Aktivitas Terakhir',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.indigo.shade900,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    recentLeaves.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Text('Belum ada riwayat pengajuan cuti',
+                                  style:
+                                      TextStyle(color: Colors.grey.shade600)),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: recentLeaves.length,
+                            itemBuilder: (context, index) {
+                              final item = recentLeaves[index];
+                              return Card(
+                                elevation: 0,
+                                margin: const EdgeInsets.only(bottom: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                  side: BorderSide(
+                                      color: Colors.grey.shade200, width: 1),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8.0, horizontal: 4.0),
+                                  child: ListTile(
+                                    leading: Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.indigo.shade50,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(Icons.date_range_rounded,
+                                          color: Colors.indigo.shade600),
+                                    ),
+                                    title: Text(
+                                      item['leave_type_name'] ?? 'Cuti',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w700),
+                                    ),
+                                    subtitle: Padding(
+                                      padding: const EdgeInsets.only(top: 4.0),
+                                      child: Text(
+                                        '${item['start_date']} s/d ${item['end_date']}',
+                                        style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                            fontSize: 12),
+                                      ),
+                                    ),
+                                    trailing: _buildStatusBadge(item['status']),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ],
+                ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMenuCard(
-      {required IconData icon,
-      required String label,
-      required Color color,
-      required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Card(
-        color: color.withOpacity(0.1),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: color.withOpacity(0.3))),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 8),
-            Text(label,
-                style: TextStyle(fontWeight: FontWeight.bold, color: color)),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatCard(String label, String value, Color color) {
-    return Expanded(
-      child: Card(
-        color: color,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Column(
-            children: [
-              Text(value,
-                  style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
-              Text(label,
-                  style: const TextStyle(fontSize: 12, color: Colors.white70)),
-            ],
-          ),
+  Widget _buildModernMenuCard({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color bgColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: bgColor,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 32, color: color),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+                fontSize: 14,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusChip(String status) {
-    Color color;
-    switch (status) {
+  Widget _buildModernStatCard(
+      String label, String value, Color color, IconData icon) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(icon, color: Colors.white.withOpacity(0.8), size: 24),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withOpacity(0.9),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color bgColor;
+    Color textColor;
+    String label;
+
+    switch (status.toLowerCase()) {
       case 'approved':
-        color = Colors.green;
+        bgColor = Colors.green.shade100;
+        textColor = Colors.green.shade800;
+        label = 'Disetujui';
         break;
       case 'rejected':
-        color = Colors.red;
+        bgColor = Colors.red.shade100;
+        textColor = Colors.red.shade800;
+        label = 'Ditolak';
         break;
       default:
-        color = Colors.orange;
+        bgColor = Colors.orange.shade100;
+        textColor = Colors.orange.shade800;
+        label = 'Menunggu';
     }
-    return Chip(
-      label: Text(status.toUpperCase(),
-          style: const TextStyle(fontSize: 10, color: Colors.white)),
-      backgroundColor: color,
-      padding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

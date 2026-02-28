@@ -29,6 +29,25 @@
     </div>
 <?php endif; ?>
 
+<?php if (session()->get('role') === 'admin' && isset($kgbDueCount) && $kgbDueCount > 0): ?>
+    <div class="card"
+        style="border-left: 4px solid #f59e0b; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 250px;">
+            <div
+                style="background: #fef3c7; color: #d97706; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div>
+                <h4 style="margin: 0; color: #111827; font-size: 1rem;">Pengingat: Kenaikan Gaji Berkala (KGB)</h4>
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Ada <strong><?= $kgbDueCount ?> pegawai</strong>
+                    yang KGB-nya akan segera jatuh tempo atau sudah terlambat diproses.</p>
+            </div>
+        </div>
+        <a href="<?= base_url('admin/kgb') ?>" class="btn btn-primary btn-sm"
+            style="background-color: #f59e0b; white-space: nowrap;">Kelola KGB</a>
+    </div>
+<?php endif; ?>
+
 <div class="stats-grid">
     <div class="stat-card">
         <div class="stat-content">

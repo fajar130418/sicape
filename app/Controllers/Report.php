@@ -132,4 +132,40 @@ class Report extends BaseController
 
         return view('report/quota', $data);
     }
+
+    public function kgb()
+    {
+        if (session()->get('role') !== 'admin') {
+            return redirect()->to('/dashboard');
+        }
+
+        $status_filter = $this->request->getVar('status');
+
+        $employees = $this->userModel
+            ->whereIn('user_type', ['PNS', 'PPPK'])
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $today = new \DateTime();
+        $kgbList = [];
+
+        foreach ($employees as $emp) {
+            $kgbInfo = \App\Controllers\Kgb::calculateKgb($emp, $today);
+
+            // Apply filter
+            if ($status_filter && $kgbInfo['kgb_status'] !== $status_filter) {
+                continue;
+            }
+
+            $kgbList[] = array_merge($emp, $kgbInfo);
+        }
+
+        $data = [
+            'title' => 'Laporan Kenaikan Gaji Berkala (KGB)',
+            'kgbList' => $kgbList,
+            'status_filter' => $status_filter
+        ];
+
+        return view('report/kgb', $data);
+    }
 }

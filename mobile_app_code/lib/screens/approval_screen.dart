@@ -90,13 +90,43 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
-          title: const Text('Persetujuan Cuti'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Sebagai Atasan'),
-              Tab(text: 'Sebagai Kapus'),
-            ],
+          title: const Text('Persetujuan Cuti', style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.indigo.shade900,
+          elevation: 0,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: TabBar(
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                indicator: BoxDecoration(
+                  borderRadius: BorderRadius.circular(25),
+                  color: Colors.indigo.shade600,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.indigo.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.grey.shade600,
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+                tabs: const [
+                  Tab(text: 'Sbg Atasan'),
+                  Tab(text: 'Sbg Kapus'),
+                ],
+              ),
+            ),
           ),
         ),
         body: _isLoading
@@ -112,8 +142,21 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
   }
 
   Widget _buildList(List<dynamic> list, String role) {
-    if (list.isEmpty)
-      return const Center(child: Text('Tidak ada permintaan tertunda'));
+    if (list.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_rounded, size: 80, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'Tidak ada permintaan tertunda',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -121,42 +164,126 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
       itemBuilder: (context, index) {
         final item = list[index];
         return Card(
-          elevation: 3,
-          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 2,
+          shadowColor: Colors.black12,
+          margin: const EdgeInsets.only(bottom: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: Colors.grey.shade200),
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['user_name'] ?? 'User',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(item['leave_type_name'],
-                    style: const TextStyle(color: Colors.blue)),
-                const SizedBox(height: 8),
-                Text('Durasi: ${item['duration']} Hari'),
-                Text('Tanggal: ${item['start_date']} s/d ${item['end_date']}'),
-                Text('Alasan: ${item['reason']}',
-                    style: const TextStyle(fontStyle: FontStyle.italic)),
-                const SizedBox(height: 12),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: () =>
-                          _process(int.parse(item['id']), 'reject', role),
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      label: const Text('Tolak',
-                          style: TextStyle(color: Colors.red)),
+                    CircleAvatar(
+                      backgroundColor: Colors.indigo.shade50,
+                      child: Icon(Icons.person_rounded, color: Colors.indigo.shade400),
                     ),
                     const SizedBox(width: 12),
-                    ElevatedButton.icon(
-                      onPressed: () =>
-                          _process(int.parse(item['id']), 'approve', role),
-                      icon: const Icon(Icons.check),
-                      label: const Text('Setujui'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item['user_name'] ?? 'User',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            item['leave_type_name'],
+                            style: TextStyle(
+                              color: Colors.indigo.shade600,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${item['duration']} Hari',
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(height: 32),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_month_rounded, size: 16, color: Colors.grey.shade500),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${item['start_date']} s/d ${item['end_date']}',
+                      style: TextStyle(color: Colors.grey.shade800),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.notes_rounded, size: 16, color: Colors.grey.shade500),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        item['reason'] ?? 'Tanpa alasan',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _process(int.parse(item['id']), 'reject', role),
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        label: const Text('Tolak'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red.shade600,
+                          side: BorderSide(color: Colors.red.shade200),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _process(int.parse(item['id']), 'approve', role),
+                        icon: const Icon(Icons.check_rounded, size: 18),
+                        label: const Text('Setujui'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

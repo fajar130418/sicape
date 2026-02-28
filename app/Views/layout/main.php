@@ -8,6 +8,24 @@
     <link rel="icon" type="image/png" href="<?= base_url('assets/img/logo.png') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <?php
+    // Global KGB Count for Sidebar Badge (Admin only)
+    $globalKgbCount = 0;
+    if (session()->get('role') === 'admin') {
+        $db = \Config\Database::connect();
+        $userModel = new \App\Models\UserModel();
+        $kgbEmployees = $userModel
+            ->whereIn('user_type', ['PNS', 'PPPK'])
+            ->findAll();
+        $today = new \DateTime();
+        foreach ($kgbEmployees as $e) {
+            $info = \App\Controllers\Kgb::calculateKgb($e, $today);
+            if (in_array($info['kgb_status'], ['overdue', 'warning'])) {
+                $globalKgbCount++;
+            }
+        }
+    }
+    ?>
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -182,6 +200,18 @@
         .sidebar-menu a i {
             width: 24px;
             margin-right: 12px;
+        }
+
+        .nav-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: auto;
+            min-width: 18px;
+            text-align: center;
         }
 
         .sidebar-footer {
@@ -680,6 +710,14 @@
                     </a>
                 </li>
                 <li>
+                    <a href="<?= base_url('admin/kgb') ?>" class="<?= uri_string() == 'admin/kgb' ? 'active' : '' ?>">
+                        <i class="fas fa-chart-line"></i> KGB
+                        <?php if ($globalKgbCount > 0): ?>
+                            <span class="nav-badge"><?= $globalKgbCount ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
+                <li>
                     <a href="<?= base_url('admin/holidays') ?>"
                         class="<?= uri_string() == 'admin/holidays' ? 'active' : '' ?>">
                         <i class="fas fa-calendar-times"></i> Manajemen Hari Libur
@@ -702,6 +740,10 @@
                     <p><?= session()->get('role') == 'admin' ? 'Administrator' : 'Pegawai ASN' ?></p>
                 </div>
             </div>
+            <a href="<?= base_url('profile') ?>" class="btn btn-primary btn-sm"
+                style="width: 100%; justify-content: center; margin-bottom: 0.5rem; background: #eef2ff; color: var(--primary-color);">
+                <i class="fas fa-user-edit" style="margin-right: 8px;"></i> Profil Saya
+            </a>
             <a href="<?= base_url('logout') ?>" class="btn btn-danger btn-sm"
                 style="width: 100%; justify-content: center;">
                 <i class="fas fa-sign-out-alt" style="margin-right: 8px;"></i> Logout

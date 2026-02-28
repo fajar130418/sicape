@@ -47,7 +47,8 @@ class UserModel extends Model
         'mkg_additional_years',
         'mkg_additional_months',
         'mkg_adjustment_years',
-        'mkg_adjustment_months'
+        'mkg_adjustment_months',
+        'last_kgb_date'
     ];
 
     protected bool $allowEmptyInserts = false;

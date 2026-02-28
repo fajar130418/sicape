@@ -59,6 +59,20 @@
             <i class="fas fa-chevron-right" style="color: #9ca3af; align-self: center;"></i>
         </div>
     </a>
+
+    <a href="<?= base_url('report/kgb') ?>" style="text-decoration: none; color: inherit;">
+        <div class="stat-card" style="transition: transform 0.2s; cursor: pointer;"
+            onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div class="stat-icon" style="background: #e0e7ff; color: #4338ca;">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Laporan KGB</h3>
+                <p>Status kenaikan gaji berkala (Terlambat, Segera, Aman) seluruh pegawai.</p>
+            </div>
+            <i class="fas fa-chevron-right" style="color: #9ca3af; align-self: center;"></i>
+        </div>
+    </a>
 </div>
 
 <div class="card" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border: none; color: white;">

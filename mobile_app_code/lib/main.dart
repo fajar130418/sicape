@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }
 
@@ -14,15 +16,26 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SICAPE Mobile',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        useMaterial3: true,
+        primarySwatch: Colors.indigo,
+        primaryColor: Colors.indigo.shade600,
         scaffoldBackgroundColor: Colors.grey[50],
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.black87,
+          centerTitle: true,
+        ),
       ),
       home: AuthCheck(),
     );
   }
 }
+
 
 class AuthCheck extends StatefulWidget {
   const AuthCheck({super.key});

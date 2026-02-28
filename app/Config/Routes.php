@@ -57,6 +57,15 @@ $routes->get('/report', 'Report::index', ['filter' => 'auth']);
 $routes->get('/report/recap', 'Report::recap', ['filter' => 'auth']);
 $routes->get('/report/details', 'Report::details', ['filter' => 'auth']);
 $routes->get('/report/quota', 'Report::quota', ['filter' => 'auth']);
+$routes->get('/report/kgb', 'Report::kgb', ['filter' => 'auth']);
+// Profile (Web)
+$routes->get('/profile', 'Profile::index', ['filter' => 'auth']);
+$routes->post('/profile/update', 'Profile::update', ['filter' => 'auth']);
+
+// KGB (Admin Only)
+$routes->get('/admin/kgb', 'Kgb::index', ['filter' => 'auth']);
+$routes->post('/admin/kgb/update/(:num)', 'Kgb::update/$1', ['filter' => 'auth']);
+
 $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
     $routes->post('login', 'Auth::login');
     $routes->post('logout', 'Auth::logout');
@@ -72,5 +81,9 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
         // Approval
         $routes->get('approval', 'Approval::index');
         $routes->post('approval/process/(:num)', 'Approval::process/$1');
+
+        // Profile
+        $routes->get('profile', 'Profile::index');
+        $routes->post('profile/update', 'Profile::update');
     });
 });

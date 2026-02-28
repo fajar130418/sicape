@@ -99,93 +99,222 @@ class _LeaveFormScreenState extends State<LeaveFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajukan Cuti')),
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: const Text('Ajukan Cuti', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.indigo.shade900,
+        elevation: 0.5,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              DropdownButtonFormField(
-                decoration: const InputDecoration(
-                    labelText: 'Jenis Cuti', border: OutlineInputBorder()),
-                items: _leaveTypes.map((type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Text(type['name']),
-                  );
-                }).toList(),
-                onChanged: (val) => setState(() => _selectedType = val),
-                validator: (val) => val == null ? 'Pilih jenis cuti' : null,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _selectDate(context, true),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                            labelText: 'Tanggal Mulai',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.calendar_today)),
-                        child: Text(_startDate != null
-                            ? DateFormat('dd/MM/yyyy').format(_startDate!)
-                            : 'Pilih'),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _selectDate(context, false),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                            labelText: 'Tanggal Selesai',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.calendar_today)),
-                        child: Text(_endDate != null
-                            ? DateFormat('dd/MM/yyyy').format(_endDate!)
-                            : 'Pilih'),
-                      ),
-                    ),
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _reasonController,
-                decoration: const InputDecoration(
-                    labelText: 'Alasan Cuti', border: OutlineInputBorder()),
-                maxLines: 3,
-                validator: (val) => val!.isEmpty ? 'Isi alasan cuti' : null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Formulir Pengajuan',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.indigo.shade900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Lengkapi data di bawah ini untuk mengajukan cuti Anda.',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                    labelText: 'Alamat Selama Cuti',
-                    border: OutlineInputBorder()),
-                validator: (val) =>
-                    val!.isEmpty ? 'Isi alamat selama cuti' : null,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                  child: _isLoading
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text('Kirim Pengajuan'),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDropdownField(),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(child: _buildDateField(true)),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildDateField(false)),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _reasonController,
+                      label: 'Alasan Cuti',
+                      icon: Icons.edit_note_rounded,
+                      maxLines: 3,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _addressController,
+                      label: 'Alamat Selama Cuti',
+                      icon: Icons.location_on_rounded,
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo.shade600,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Text(
+                                'KIRIM PENGAJUAN',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDropdownField() {
+    return DropdownButtonFormField(
+      decoration: InputDecoration(
+        labelText: 'Jenis Cuti',
+        prefixIcon: Icon(Icons.category_rounded, color: Colors.indigo.shade400),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.indigo.shade400, width: 2),
+        ),
+      ),
+      items: _leaveTypes.map((type) {
+        return DropdownMenuItem(
+          value: type,
+          child: Text(type['name']),
+        );
+      }).toList(),
+      onChanged: (val) => setState(() => _selectedType = val),
+      validator: (val) => val == null ? 'Pilih jenis cuti' : null,
+      icon: Icon(Icons.keyboard_arrow_down_rounded, color: Colors.indigo.shade400),
+      dropdownColor: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+    );
+  }
+
+  Widget _buildDateField(bool isStart) {
+    return InkWell(
+      onTap: () => _selectDate(context, isStart),
+      borderRadius: BorderRadius.circular(16),
+      child: IgnorePointer(
+        child: TextFormField(
+          decoration: InputDecoration(
+            labelText: isStart ? 'Mulai' : 'Selesai',
+            prefixIcon: Icon(Icons.calendar_month_rounded, color: Colors.indigo.shade400),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+          ),
+          controller: TextEditingController(
+            text: isStart
+                ? (_startDate != null ? DateFormat('dd/MM/yyyy').format(_startDate!) : '')
+                : (_endDate != null ? DateFormat('dd/MM/yyyy').format(_endDate!) : ''),
+          ),
+          validator: (val) => val!.isEmpty ? 'Pilih' : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        alignLabelWithHint: maxLines > 1,
+        prefixIcon: Padding(
+          padding: EdgeInsets.only(bottom: maxLines > 1 ? (maxLines * 10.0) : 0),
+          child: Icon(icon, color: Colors.indigo.shade400),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: Colors.indigo.shade400, width: 2),
+        ),
+      ),
+      validator: (val) => val!.isEmpty ? 'Bagian ini wajib diisi' : null,
     );
   }
 }

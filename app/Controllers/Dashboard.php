@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
+use App\Controllers\Kgb as KgbController;
 
 class Dashboard extends BaseController
 {
@@ -40,12 +41,25 @@ class Dashboard extends BaseController
             ->findAll(5);
 
         $expiringPPPKCount = 0;
+        $kgbDueCount = 0;
         if (session()->get('role') === 'admin') {
             $oneMonthLater = date('Y-m-d', strtotime('+1 month'));
             $expiringPPPKCount = $userModel->where('user_type !=', 'PNS')
                 ->where('contract_end_date <=', $oneMonthLater)
                 ->where('contract_end_date >=', date('Y-m-d'))
                 ->countAllResults();
+
+            // KGB due count: employees whose next KGB is overdue or within 2 months
+            $kgbEmployees = $userModel
+                ->whereIn('user_type', ['PNS', 'PPPK'])
+                ->findAll();
+            $today = new \DateTime();
+            foreach ($kgbEmployees as $e) {
+                $info = KgbController::calculateKgb($e, $today);
+                if (in_array($info['kgb_status'], ['overdue', 'warning'])) {
+                    $kgbDueCount++;
+                }
+            }
         }
 
         $data = [
@@ -57,7 +71,8 @@ class Dashboard extends BaseController
             'remainingAnnualLeave' => $remainingAnnualLeave,
             'leaveBreakdown' => $detailed,
             'history' => $history,
-            'expiringPPPKCount' => $expiringPPPKCount
+            'expiringPPPKCount' => $expiringPPPKCount,
+            'kgbDueCount' => $kgbDueCount,
         ];
 
         return view('dashboard/index', $data);

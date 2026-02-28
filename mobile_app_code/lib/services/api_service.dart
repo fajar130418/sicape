@@ -8,10 +8,10 @@ class ApiService {
   // Or 10.0.2.2 if testing on Android Emulator
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://localhost/sicape/public/index.php/api';
+      return 'http://localhost:8081/api';
     }
     // Android Emulator 10.0.2.2
-    return 'http://10.0.2.2/sicape/public/index.php/api';
+    return 'http://10.0.2.2:8081/api';
   }
 
   Future<String?> getToken() async {
@@ -118,5 +118,42 @@ class ApiService {
       body: jsonEncode({'action': action, 'role': role, 'note': note}),
     );
     return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> getProfile() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/profile'),
+        headers: await _headers(),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return {
+        'status': response.statusCode,
+        'message': 'Failed to load profile'
+      };
+    } catch (e) {
+      return {'status': 500, 'message': 'Connection error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/profile/update'),
+        headers: await _headers(),
+        body: jsonEncode(data),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return {
+        'status': response.statusCode,
+        'message': 'Failed to update profile'
+      };
+    } catch (e) {
+      return {'status': 500, 'message': 'Connection error: $e'};
+    }
   }
 }
