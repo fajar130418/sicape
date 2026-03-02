@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -31,11 +31,10 @@ class MyApp extends StatelessWidget {
           centerTitle: true,
         ),
       ),
-      home: AuthCheck(),
+      home: const AuthCheck(),
     );
   }
 }
-
 
 class AuthCheck extends StatefulWidget {
   const AuthCheck({super.key});
@@ -65,8 +64,9 @@ class _AuthCheckState extends State<AuthCheck> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading)
+    if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    return _isLoggedIn ? DashboardScreen() : LoginScreen();
+    }
+    return _isLoggedIn ? const DashboardScreen() : const LoginScreen();
   }
 }

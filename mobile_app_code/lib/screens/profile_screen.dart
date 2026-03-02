@@ -429,7 +429,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     void Function(String?) onChanged,
   ) {
     return DropdownButtonFormField<String>(
-      value: items.contains(value) ? value : null,
+      initialValue: items.contains(value) ? value : null,
       onChanged: onChanged,
       isExpanded: true,
       decoration: InputDecoration(

@@ -31,7 +31,7 @@
 
 <?php if (session()->get('role') === 'admin' && isset($kgbDueCount) && $kgbDueCount > 0): ?>
     <div class="card"
-        style="border-left: 4px solid #f59e0b; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+        style="border-left: 4px solid #f59e0b; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
         <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 250px;">
             <div
                 style="background: #fef3c7; color: #d97706; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
@@ -45,6 +45,26 @@
         </div>
         <a href="<?= base_url('admin/kgb') ?>" class="btn btn-primary btn-sm"
             style="background-color: #f59e0b; white-space: nowrap;">Kelola KGB</a>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($myKgbInfo) && $myKgbInfo && in_array($myKgbInfo['kgb_status'], ['warning', 'overdue'])): ?>
+    <div class="card"
+        style="border-left: 4px solid #f59e0b; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1; min-width: 250px;">
+            <div
+                style="background: #fef3c7; color: #d97706; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div>
+                <h4 style="margin: 0; color: #111827; font-size: 1rem;">Penting: Jatuh Tempo Kenaikan Gaji Berkala (KGB)</h4>
+                <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                    KGB Anda akan jatuh tempo pada
+                    <strong><?= date('d M Y', strtotime($myKgbInfo['kgb_next_date'])) ?></strong>.
+                    Silakan segera lapor kepada Admin untuk pemrosesan.
+                </p>
+            </div>
+        </div>
     </div>
 <?php endif; ?>
 
@@ -93,6 +113,28 @@
             <i class="fas fa-hourglass-half"></i>
         </div>
     </div>
+
+    <?php if (isset($myKgbInfo) && $myKgbInfo): ?>
+        <div class="stat-card">
+            <div class="stat-content">
+                <h3>
+                    <?php if ($myKgbInfo['kgb_days_left'] !== null): ?>
+                        <?= $myKgbInfo['kgb_days_left'] > 0 ? $myKgbInfo['kgb_days_left'] . ' Hari' : 'Jatuh Tempo' ?>
+                    <?php else: ?>
+                        -
+                    <?php endif; ?>
+                </h3>
+                <p>Sisa Waktu KGB</p>
+                <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">(Kenaikan Gaji Berkala)</div>
+                <div style="font-size: 0.75rem; color: #4f46e5; margin-top: 0.5rem; line-height: 1.2;">
+                    Tgl: <?= date('d M Y', strtotime($myKgbInfo['kgb_next_date'])) ?>
+                </div>
+            </div>
+            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
+                <i class="fas fa-clock"></i>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <div class="card">

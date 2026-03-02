@@ -6,6 +6,8 @@ import 'login_screen.dart';
 import 'leave_form_screen.dart';
 import 'approval_screen.dart';
 import 'profile_screen.dart';
+import 'history_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -19,6 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _dashboardData;
   Map<String, dynamic>? _user;
   bool _isLoading = true;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -64,11 +67,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final leaveBalance = _dashboardData?['leave_balance'];
-    final n = leaveBalance?['n'] ?? 0;
-    final n1 = leaveBalance?['n1'] ?? 0;
-    final n2 = leaveBalance?['n2'] ?? 0;
-    final totalBalance = n + n1 + n2;
     final recentLeaves =
         _dashboardData?['recent_leaves'] as List<dynamic>? ?? [];
 
@@ -78,6 +76,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+            // Handle navigation for non-home tabs if needed,
+            // but for "WhatsApp style" we can just switch content or push screens.
+            // Keeping it simple: Home is index 0. Others navigate.
+            if (index == 1) {
+              Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const LeaveFormScreen()))
+                  .then((_) => _loadData());
+              setState(() => _selectedIndex = 0);
+            } else if (index == 2) {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const HistoryScreen()));
+              setState(() => _selectedIndex = 0);
+            } else if (index == 3 && isSupervisor) {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const ApprovalScreen()));
+              setState(() => _selectedIndex = 0);
+            } else if (index == (isSupervisor ? 4 : 3)) {
+              Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ProfileScreen()))
+                  .then((_) => _loadData());
+              setState(() => _selectedIndex = 0);
+            }
+          },
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: Colors.white,
+          selectedItemColor: Colors.indigo.shade600,
+          unselectedItemColor: Colors.grey.shade400,
+          showUnselectedLabels: true,
+          selectedLabelStyle:
+              GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+          unselectedLabelStyle:
+              GoogleFonts.outfit(fontWeight: FontWeight.medium, fontSize: 12),
+          elevation: 0,
+          items: [
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              label: 'Beranda',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline_rounded),
+              label: 'Ajukan',
+            ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.history_rounded),
+              label: 'Riwayat',
+            ),
+            if (isSupervisor)
+              const BottomNavigationBarItem(
+                icon: Icon(Icons.verified_user_rounded),
+                label: 'Persetujuan',
+              ),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.person_rounded),
+              label: 'Profil',
+            ),
+          ],
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: _loadData,
         child: CustomScrollView(
@@ -217,154 +291,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (_dashboardData?['kgb_info'] != null &&
+                        (_dashboardData!['kgb_info']['kgb_status'] ==
+                                'warning' ||
+                            _dashboardData!['kgb_info']['kgb_status'] ==
+                                'overdue'))
+                      _buildKgbWarning(),
                     Text(
-                      'Menu Utama',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
+                      'Info Pegawai & Cuti',
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                         color: Colors.indigo.shade900,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    GridView.count(
-                      shrinkWrap: true,
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.1,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _buildModernMenuCard(
-                          icon: Icons.edit_document,
-                          label: 'Ajukan Cuti',
-                          color: Colors.blue.shade600,
-                          bgColor: Colors.blue.shade50,
-                          onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => LeaveFormScreen()))
-                              .then((_) => _loadData()),
-                        ),
-                        if (isSupervisor)
-                          _buildModernMenuCard(
-                            icon: Icons.verified_rounded,
-                            label: 'Persetujuan',
-                            color: Colors.orange.shade600,
-                            bgColor: Colors.orange.shade50,
-                            onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => ApprovalScreen())),
-                          ),
-                        _buildModernMenuCard(
-                          icon: Icons.history_rounded,
-                          label: 'Riwayat Cuti',
-                          color: Colors.teal.shade600,
-                          bgColor: Colors.teal.shade50,
-                          onTap: () {/* TODO: History Screen */},
-                        ),
-                        _buildModernMenuCard(
-                          icon: Icons.settings_rounded,
-                          label: 'Pengaturan',
-                          color: Colors.blueGrey.shade600,
-                          bgColor: Colors.blueGrey.shade50,
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'Info Sisa Cuti',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.indigo.shade900,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        _buildModernStatCard('Total Cuti', '$totalBalance',
-                            Colors.blue.shade600, Icons.pie_chart_rounded),
-                        const SizedBox(width: 12),
-                        _buildModernStatCard('Tahun N', '$n',
-                            Colors.teal.shade500, Icons.filter_1_rounded),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        _buildModernStatCard('Tahun N-1', '$n1',
-                            Colors.orange.shade500, Icons.filter_2_rounded),
-                        const SizedBox(width: 12),
-                        _buildModernStatCard('Tahun N-2', '$n2',
-                            Colors.red.shade400, Icons.filter_3_rounded),
-                      ],
-                    ),
+                    _buildHorizontalInfoCards(),
                     const SizedBox(height: 32),
                     Text(
                       'Aktivitas Terakhir',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
+                      style: GoogleFonts.outfit(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                         color: Colors.indigo.shade900,
                       ),
                     ),
                     const SizedBox(height: 16),
                     recentLeaves.isEmpty
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Text('Belum ada riwayat pengajuan cuti',
-                                  style:
-                                      TextStyle(color: Colors.grey.shade600)),
-                            ),
-                          )
+                        ? _buildEmptyActivity()
                         : ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: recentLeaves.length,
                             itemBuilder: (context, index) {
                               final item = recentLeaves[index];
-                              return Card(
-                                elevation: 0,
-                                margin: const EdgeInsets.only(bottom: 12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                  side: BorderSide(
-                                      color: Colors.grey.shade200, width: 1),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8.0, horizontal: 4.0),
-                                  child: ListTile(
-                                    leading: Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: Colors.indigo.shade50,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(Icons.date_range_rounded,
-                                          color: Colors.indigo.shade600),
-                                    ),
-                                    title: Text(
-                                      item['leave_type_name'] ?? 'Cuti',
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w700),
-                                    ),
-                                    subtitle: Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
-                                      child: Text(
-                                        '${item['start_date']} s/d ${item['end_date']}',
-                                        style: TextStyle(
-                                            color: Colors.grey.shade600,
-                                            fontSize: 12),
-                                      ),
-                                    ),
-                                    trailing: _buildStatusBadge(item['status']),
-                                  ),
-                                ),
-                              );
+                              return _buildRecentActivityCard(item);
                             },
                           ),
                   ],
@@ -377,96 +338,223 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildModernMenuCard({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required Color bgColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 32, color: color),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
+  Widget _buildHorizontalInfoCards() {
+    final leaveBalance = _dashboardData?['leave_balance'];
+    final seniority = _dashboardData?['seniority'];
+    final kgbInfo = _dashboardData?['kgb_info'];
+
+    final String masaKerja = seniority != null
+        ? '${seniority['years']} Thn ${seniority['months']} Bln'
+        : '0 Thn 0 Bln';
+
+    final String kuotaCuti = '${leaveBalance?['initial']?['total'] ?? 0} Hari';
+    final String cutiTerpakai = '${leaveBalance?['used'] ?? 0} Hari';
+    final String sisaCuti = '${leaveBalance?['remaining']?['total'] ?? 0} Hari';
+    final String kgbValue = kgbInfo != null
+        ? (kgbInfo['kgb_days_left'] != null && kgbInfo['kgb_days_left'] > 0
+            ? '${kgbInfo['kgb_days_left']} Hari'
+            : 'Jatuh Tempo')
+        : '-';
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          _buildInfoCard(
+            value: masaKerja,
+            label: 'Masa Kerja',
+            icon: Icons.work_history_rounded,
+            color: Colors.blue.shade600,
+          ),
+          _buildInfoCard(
+            value: kuotaCuti,
+            label: 'Kuota Cuti Tahunan',
+            icon: Icons.calendar_month_rounded,
+            color: Colors.green.shade600,
+          ),
+          _buildInfoCard(
+            value: cutiTerpakai,
+            label: 'Cuti Terpakai',
+            icon: Icons.calendar_today_rounded,
+            color: Colors.red.shade600,
+          ),
+          _buildInfoCard(
+            value: sisaCuti,
+            label: 'Sisa Cuti Tahunan',
+            subLabel:
+                'N: ${leaveBalance?['remaining']?['n'] ?? 0} | N-1: ${leaveBalance?['remaining']?['n1'] ?? 0} | N-2: ${leaveBalance?['remaining']?['n2'] ?? 0}',
+            icon: Icons.hourglass_bottom_rounded,
+            color: Colors.orange.shade600,
+          ),
+          _buildInfoCard(
+            value: kgbValue,
+            label: 'Sisa Waktu KGB',
+            subLabel:
+                '(Kenaikan Gaji Berkala)\nTgl: ${kgbInfo?['kgb_next_date'] ?? "-"}',
+            icon: Icons.access_time_rounded,
+            color: Colors.purple.shade600,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildModernStatCard(
-      String label, String value, Color color, IconData icon) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+  Widget _buildInfoCard({
+    required String value,
+    required String label,
+    required IconData icon,
+    required Color color,
+    String? subLabel,
+  }) {
+    return Container(
+      width: 200,
+      margin: const EdgeInsets.only(right: 16, bottom: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: GoogleFonts.outfit(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.grey.shade900,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 13,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (subLabel != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              subLabel,
+              style: GoogleFonts.outfit(
+                fontSize: 11,
+                color: color.withOpacity(0.8),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivityCard(dynamic item) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade200, width: 1),
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.indigo.shade50,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(Icons.date_range_rounded, color: Colors.indigo.shade600),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        title: Text(
+          item['leave_type_name'] ?? 'Cuti',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          '${item['start_date']} s/d ${item['end_date']}',
+          style: GoogleFonts.outfit(color: Colors.grey.shade600, fontSize: 12),
+        ),
+        trailing: _buildStatusBadge(item['status']),
+      ),
+    );
+  }
+
+  Widget _buildKgbWarning() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.orange.shade200, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded,
+              color: Colors.orange.shade800, size: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: Colors.white.withOpacity(0.8), size: 24),
                 Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 24,
+                  'Penting: Jatuh Tempo KGB',
+                  style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Colors.orange.shade900,
                   ),
+                ),
+                Text(
+                  'Kenaikan Gaji Berkala (KGB) Anda hampir tercapai. Silakan segera lapor kepada Admin.',
+                  style: GoogleFonts.outfit(
+                      color: Colors.orange.shade800, fontSize: 12),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyActivity() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40.0),
+        child: Column(
+          children: [
+            Icon(Icons.inbox_rounded, size: 48, color: Colors.grey.shade300),
+            const SizedBox(height: 12),
             Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withOpacity(0.9),
-              ),
+              'Belum ada riwayat pengajuan',
+              style: GoogleFonts.outfit(color: Colors.grey.shade500),
             ),
           ],
         ),
@@ -481,32 +569,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     switch (status.toLowerCase()) {
       case 'approved':
-        bgColor = Colors.green.shade100;
+        bgColor = Colors.green.shade50;
         textColor = Colors.green.shade800;
         label = 'Disetujui';
         break;
       case 'rejected':
-        bgColor = Colors.red.shade100;
+        bgColor = Colors.red.shade50;
         textColor = Colors.red.shade800;
         label = 'Ditolak';
         break;
       default:
-        bgColor = Colors.orange.shade100;
+        bgColor = Colors.orange.shade50;
         textColor = Colors.orange.shade800;
         label = 'Menunggu';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: GoogleFonts.outfit(
           color: textColor,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.bold,
         ),
       ),

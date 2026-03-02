@@ -62,6 +62,12 @@ class Dashboard extends BaseController
             }
         }
 
+        // Specific KGB info for the logged-in user
+        $myKgbInfo = null;
+        if (in_array($user['user_type'], ['PNS', 'PPPK'])) {
+            $myKgbInfo = KgbController::calculateKgb($user, new \DateTime());
+        }
+
         $data = [
             'title' => 'Dashboard',
             'yearsOfService' => $yearsOfService,
@@ -73,6 +79,7 @@ class Dashboard extends BaseController
             'history' => $history,
             'expiringPPPKCount' => $expiringPPPKCount,
             'kgbDueCount' => $kgbDueCount,
+            'myKgbInfo' => $myKgbInfo,
         ];
 
         return view('dashboard/index', $data);

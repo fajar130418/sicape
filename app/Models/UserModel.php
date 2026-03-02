@@ -137,18 +137,29 @@ class UserModel extends Model
         $remN = max(0, $initialN - $leftoverAfterN1);
 
         return [
-            'n' => $remN,
-            'n1' => $remN1,
-            'n2' => $remN2,
-            'total' => $remN + $remN1 + $remN2
+            'initial' => [
+                'n' => $initialN,
+                'n1' => $initialN1,
+                'n2' => $initialN2,
+                'total' => $initialN + $initialN1 + $initialN2
+            ],
+            'used' => $usedInN,
+            'remaining' => [
+                'n' => $remN,
+                'n1' => $remN1,
+                'n2' => $remN2,
+                'total' => $remN + $remN1 + $remN2
+            ]
         ];
+
     }
 
     public function getRemainingLeave($userId, $year = null)
     {
         $details = $this->getDetailedRemainingLeave($userId, $year);
-        return $details['total'];
+        return $details['remaining']['total'];
     }
+
 
     /**
      * Menghitung Masa Kerja Golongan (MKG) dengan mempertimbangkan PMK dan Penyesuaian Gelar.

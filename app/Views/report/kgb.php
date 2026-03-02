@@ -24,6 +24,11 @@
     <form action="<?= base_url('report/kgb') ?>" method="get"
         style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 200px;">
+            <label class="form-label">Nama Pegawai</label>
+            <input type="text" name="name" class="form-control" placeholder="Cari nama..."
+                value="<?= esc($name_filter ?? '') ?>">
+        </div>
+        <div style="flex: 1; min-width: 200px;">
             <label class="form-label">Filter Status KGB</label>
             <select name="status" class="form-control">
                 <option value="">Semua Status</option>

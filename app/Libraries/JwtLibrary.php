@@ -12,7 +12,7 @@ class JwtLibrary
     public function __construct()
     {
         // Use a default key if not set in .env (for development simplicity, but recommend .env)
-        $this->key = getenv('JWT_SECRET') ?: 'sicape_secret_key_2024_secure';
+        $this->key = getenv('JWT_SECRET') ?: 'sicape_secret_key_2024_secure_long_32bit';
     }
 
     public function generateToken($user)

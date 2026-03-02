@@ -30,7 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (result['success']) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => DashboardScreen()),
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +111,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: 'Nomor Induk Pegawai (NIP)',
-                        prefixIcon: Icon(Icons.badge_rounded, color: Colors.indigo.shade400),
+                        prefixIcon: Icon(Icons.badge_rounded,
+                            color: Colors.indigo.shade400),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                         border: OutlineInputBorder(
@@ -124,7 +125,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.indigo.shade400, width: 2),
+                          borderSide: BorderSide(
+                              color: Colors.indigo.shade400, width: 2),
                         ),
                       ),
                     ),
@@ -134,7 +136,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'Kata Sandi',
-                        prefixIcon: Icon(Icons.lock_rounded, color: Colors.indigo.shade400),
+                        prefixIcon: Icon(Icons.lock_rounded,
+                            color: Colors.indigo.shade400),
                         filled: true,
                         fillColor: Colors.grey.shade50,
                         border: OutlineInputBorder(
@@ -147,7 +150,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.indigo.shade400, width: 2),
+                          borderSide: BorderSide(
+                              color: Colors.indigo.shade400, width: 2),
                         ),
                       ),
                     ),

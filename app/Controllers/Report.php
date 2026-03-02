@@ -140,11 +140,19 @@ class Report extends BaseController
         }
 
         $status_filter = $this->request->getVar('status');
+        $name_filter = $this->request->getVar('name');
 
-        $employees = $this->userModel
-            ->whereIn('user_type', ['PNS', 'PPPK'])
-            ->orderBy('name', 'ASC')
-            ->findAll();
+        $query = $this->userModel
+            ->groupStart()
+            ->where('user_type', 'PNS')
+            ->orLike('user_type', 'PPPK', 'after')
+            ->groupEnd();
+
+        if ($name_filter) {
+            $query->like('name', $name_filter);
+        }
+
+        $employees = $query->orderBy('name', 'ASC')->findAll();
 
         $today = new \DateTime();
         $kgbList = [];
@@ -152,7 +160,7 @@ class Report extends BaseController
         foreach ($employees as $emp) {
             $kgbInfo = \App\Controllers\Kgb::calculateKgb($emp, $today);
 
-            // Apply filter
+            // Apply status filter
             if ($status_filter && $kgbInfo['kgb_status'] !== $status_filter) {
                 continue;
             }
@@ -163,7 +171,8 @@ class Report extends BaseController
         $data = [
             'title' => 'Laporan Kenaikan Gaji Berkala (KGB)',
             'kgbList' => $kgbList,
-            'status_filter' => $status_filter
+            'status_filter' => $status_filter,
+            'name_filter' => $name_filter
         ];
 
         return view('report/kgb', $data);

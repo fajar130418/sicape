@@ -58,7 +58,7 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: action == 'approve' ? Colors.green : Colors.red,
             ),
-            child: Text('Konfirmasi'),
+            child: const Text('Konfirmasi'),
           ),
         ],
       ),
@@ -92,7 +92,8 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
       child: Scaffold(
         backgroundColor: Colors.grey.shade50,
         appBar: AppBar(
-          title: const Text('Persetujuan Cuti', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text('Persetujuan Cuti',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           backgroundColor: Colors.white,
           foregroundColor: Colors.indigo.shade900,
           elevation: 0,
@@ -180,7 +181,8 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
                   children: [
                     CircleAvatar(
                       backgroundColor: Colors.indigo.shade50,
-                      child: Icon(Icons.person_rounded, color: Colors.indigo.shade400),
+                      child: Icon(Icons.person_rounded,
+                          color: Colors.indigo.shade400),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -206,7 +208,8 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(12),
@@ -225,7 +228,8 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
                 const Divider(height: 32),
                 Row(
                   children: [
-                    Icon(Icons.calendar_month_rounded, size: 16, color: Colors.grey.shade500),
+                    Icon(Icons.calendar_month_rounded,
+                        size: 16, color: Colors.grey.shade500),
                     const SizedBox(width: 8),
                     Text(
                       '${item['start_date']} s/d ${item['end_date']}',
@@ -237,7 +241,8 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.notes_rounded, size: 16, color: Colors.grey.shade500),
+                    Icon(Icons.notes_rounded,
+                        size: 16, color: Colors.grey.shade500),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -255,7 +260,8 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _process(int.parse(item['id']), 'reject', role),
+                        onPressed: () =>
+                            _process(int.parse(item['id']), 'reject', role),
                         icon: const Icon(Icons.close_rounded, size: 18),
                         label: const Text('Tolak'),
                         style: OutlinedButton.styleFrom(
@@ -271,7 +277,8 @@ class _ApprovalScreenState extends State<ApprovalScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () => _process(int.parse(item['id']), 'approve', role),
+                        onPressed: () =>
+                            _process(int.parse(item['id']), 'approve', role),
                         icon: const Icon(Icons.check_rounded, size: 18),
                         label: const Text('Setujui'),
                         style: ElevatedButton.styleFrom(

@@ -6,6 +6,8 @@ use App\Controllers\BaseController;
 use CodeIgniter\API\ResponseTrait;
 use App\Models\UserModel;
 
+use App\Controllers\Kgb as KgbController;
+
 class Dashboard extends BaseController
 {
     use ResponseTrait;
@@ -27,6 +29,7 @@ class Dashboard extends BaseController
         $userId = $userData['id'];
 
         $userModel = new UserModel();
+        $user = $userModel->find($userId);
 
         // Re-use logic from Dashboard Controller or Model
         // Calculate Leave Balance
@@ -34,6 +37,12 @@ class Dashboard extends BaseController
 
         // Calculate Seniority
         $seniority = $userModel->calculateSeniority($userId);
+
+        // Calculate KGB Info
+        $kgbInfo = null;
+        if (in_array($user['user_type'] ?? '', ['PNS', 'PPPK'])) {
+            $kgbInfo = KgbController::calculateKgb($user, new \DateTime());
+        }
 
         // Get Recent Leave History (last 5)
         $db = \Config\Database::connect();
@@ -50,6 +59,7 @@ class Dashboard extends BaseController
             'data' => [
                 'leave_balance' => $leaveDetails,
                 'seniority' => $seniority,
+                'kgb_info' => $kgbInfo,
                 'recent_leaves' => $recentLeaves,
                 'server_time' => date('Y-m-d H:i:s')
             ]

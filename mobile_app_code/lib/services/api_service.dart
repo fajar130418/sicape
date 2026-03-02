@@ -6,7 +6,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ApiService {
   // Replace with your actual local IP address (e.g., 192.168.1.x) if testing on real device
   // Or 10.0.2.2 if testing on Android Emulator
+  // Set this to your ngrok or production URL (e.g., 'https://your-id.ngrok-free.app/api')
+  static String? productionUrl = 'https://sicape.dispursipseruyan.my.id/api';
+
   static String get baseUrl {
+    if (productionUrl != null) {
+      return productionUrl!;
+    }
     if (kIsWeb) {
       return 'http://localhost:8081/api';
     }
@@ -43,9 +49,12 @@ class ApiService {
         await prefs.setString('user', jsonEncode(data['user']));
         return {'success': true, 'data': data};
       } else {
+        final Map<String, dynamic> errorData = jsonDecode(response.body);
         return {
           'success': false,
-          'message': jsonDecode(response.body)['messages']['error'] ??
+          'message': (errorData['messages'] is Map
+                  ? errorData['messages']['error']
+                  : null) ??
               'Login failed: ${response.statusCode}'
         };
       }
