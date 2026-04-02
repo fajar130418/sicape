@@ -4,8 +4,14 @@ import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'api/firebase_api.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  // Tidak menggunakan await agar tidak memblokir startup meskipun inisialisasi gagal/lambat
+  FirebaseApi().initNotifications();
   runApp(const MyApp());
 }
 

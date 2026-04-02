@@ -333,6 +333,12 @@
                 </button>
             </form>
 
+            <div style="margin-top: 1.25rem;">
+                <a href="<?= base_url('apk/app-release.apk') ?>" style="display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 0.85rem; border-radius: 16px; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); font-weight: 600; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(16, 185, 129, 0.2)'" onmouseout="this.style.background='rgba(16, 185, 129, 0.1)'">
+                    <i class="fab fa-android" style="font-size: 1.2rem; color: #10b981;"></i> Unduh Aplikasi Android
+                </a>
+            </div>
+
             <div class="footer">
                 <p>&copy; 2026 Dinas Perpustakaan dan Kearsipan Kabupaten Seruyan</p>
             </div>

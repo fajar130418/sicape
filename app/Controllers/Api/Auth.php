@@ -43,6 +43,8 @@ class Auth extends BaseController
                 'nip' => $user['nip'],
                 'name' => $user['name'],
                 'role' => $user['role'],
+                'is_supervisor' => (bool)$user['is_supervisor'],
+                'is_head_of_agency' => (bool)$user['is_head_of_agency'],
                 'photo' => $user['photo'] ? base_url('uploads/photos/' . $user['photo']) : null
             ]
         ]);

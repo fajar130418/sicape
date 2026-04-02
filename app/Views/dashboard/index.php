@@ -104,9 +104,9 @@
             <h3><?= $remainingAnnualLeave ?> Hari</h3>
             <p>Sisa Cuti Tahunan</p>
             <div style="font-size: 0.75rem; color: #92400e; margin-top: 0.5rem; line-height: 1.2;">
-                N: <?= $leaveBreakdown['n'] ?> |
-                N-1: <?= $leaveBreakdown['n1'] ?> |
-                N-2: <?= $leaveBreakdown['n2'] ?>
+                N: <?= $leaveBreakdown['remaining']['n'] ?> |
+                N-1: <?= $leaveBreakdown['remaining']['n1'] ?> |
+                N-2: <?= $leaveBreakdown['remaining']['n2'] ?>
             </div>
         </div>
         <div class="stat-icon" style="background: #fef3c7; color: #d97706;">

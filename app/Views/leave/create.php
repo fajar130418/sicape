@@ -155,7 +155,7 @@
     const endDateInput = document.getElementById('end_date');
 
     const capOptions = `
-        <select name="reason" id="reason" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Outfit', sans-serif; box-sizing: border-box;">
+        <select name="reason" id="reason_select" required style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 8px; font-family: 'Outfit', sans-serif; box-sizing: border-box;">
             <option value="">-- Pilih Alasan Cuti --</option>
             <option value="Keluarga Inti Sakit Keras" data-req="1">Keluarga Inti Sakit Keras (Wajib Lampiran)</option>
             <option value="Keluarga Inti Meninggal Dunia" data-req="0">Keluarga Inti Meninggal Dunia (Opsional Lampiran)</option>
@@ -210,19 +210,22 @@
         // Reset state
         categoryContainer.style.display = 'none';
         categoryContainer.innerHTML = '';
+        reasonContainer.style.display = 'block'; // Pastikan muncul kembali
         reasonContainer.innerHTML = defaultReason;
         document.getElementById('reason_hint').innerHTML = '';
         handleFileUpload(requiresFile == '1');
 
-        if (typeName === 'Cuti Alasan Penting') {
-            reasonContainer.innerHTML = capOptions;
+        if (typeName === 'Cuti Alasan Penting' || typeName === 'Cuti Karena Alasan Penting') {
+            categoryContainer.style.display = 'block';
+            categoryContainer.innerHTML = capOptions;
             handleFileUpload(false); // Reset file upload visibility
+            reasonContainer.style.display = 'none'; // Sembunyikan textarea untuk CAP
 
             // Add hint about core family
             document.getElementById('reason_hint').innerHTML = '<strong>Keluarga Inti:</strong> Ibu, Bapak, Istri/Suami, Anak, Adik, Kakak, Mertua, atau Menantu.';
 
             // Add event listener to new select
-            const capReasonSelect = document.getElementById('reason');
+            const capReasonSelect = document.getElementById('reason_select');
             capReasonSelect.addEventListener('change', function () {
                 const opt = this.options[this.selectedIndex];
                 const req = opt.getAttribute('data-req') === '1';

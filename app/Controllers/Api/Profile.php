@@ -18,7 +18,7 @@ class Profile extends BaseController
         }
 
         $userModel = new UserModel();
-        $user = $userModel->find($userData->id);
+        $user = $userModel->find($userData['id']);
 
         if (!$user) {
             return $this->failNotFound('User not found');
@@ -42,7 +42,7 @@ class Profile extends BaseController
         }
 
         $userModel = new UserModel();
-        $user = $userModel->find($userData->id);
+        $user = $userModel->find($userData['id']);
 
         if (!$user) {
             return $this->failNotFound('User not found');
@@ -104,7 +104,7 @@ class Profile extends BaseController
             ]);
         }
 
-        if ($userModel->update($userData->id, $updateData)) {
+        if ($userModel->update($userData['id'], $updateData)) {
             return $this->respond([
                 'status' => 200,
                 'message' => 'Profile updated successfully',
@@ -112,5 +112,34 @@ class Profile extends BaseController
         } else {
             return $this->fail('Failed to update profile');
         }
+    }
+
+    public function updateFcmToken()
+    {
+        $userData = $this->request->userData;
+        if (!$userData) {
+            return $this->failUnauthorized('Invalid token data');
+        }
+
+        $input = $this->request->getJSON(true) ?? $this->request->getPost();
+        if (empty($input['fcm_token'])) {
+            return $this->failValidationErrors(['fcm_token' => 'Token required']);
+        }
+
+        $userModel = new UserModel();
+        
+        // Remove token from other users if it exists to avoid conflicts
+        $db = \Config\Database::connect();
+        $db->table('users')->where('fcm_token', $input['fcm_token'])->update(['fcm_token' => null]);
+        
+        // Update to current user
+        if ($userModel->update($userData['id'], ['fcm_token' => $input['fcm_token']])) {
+            return $this->respond([
+                'status' => 200,
+                'message' => 'FCM Token updated successfully',
+            ]);
+        }
+
+        return $this->fail('Failed to update token');
     }
 }

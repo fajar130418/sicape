@@ -29,7 +29,7 @@ class Dashboard extends BaseController
         $initialN2 = min((int) ($user['leave_balance_n2'] ?? 0), 6);
         $annualLeaveQuota = $initialN + $initialN1 + $initialN2;
 
-        $remainingAnnualLeave = $detailed['total'];
+        $remainingAnnualLeave = $detailed['remaining']['total'];
         $usedAnnualLeave = $annualLeaveQuota - $remainingAnnualLeave;
 
         // Fetch recent history

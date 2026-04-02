@@ -106,6 +106,79 @@ class Admin extends BaseController
             $updated++;
         }
 
-        return redirect()->to('/admin')->with('success', "Berhasil menghitung ulang durasi untuk {$updated} pengajuan cuti.");
+    }
+
+    public function verify_forms()
+    {
+        if (session()->get('role') !== 'admin') {
+            return redirect()->to('/dashboard');
+        }
+
+        $requestModel = new \App\Models\LeaveRequestModel();
+        
+        // Fetch requests that have a form uploaded but not yet approved
+        $pendingForms = $requestModel->select('leave_requests.*, users.name as user_name, users.nip, leave_types.name as type_name')
+            ->join('users', 'users.id = leave_requests.user_id')
+            ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+            ->whereIn('signed_form_status', ['pending_upload', 'pending_approval', 'rejected'])
+            ->where('is_bypassed', 0)
+            ->orderBy('leave_requests.updated_at', 'ASC')
+            ->findAll();
+
+        $data = [
+            'title' => 'Verifikasi Form Cuti',
+            'pendingForms' => $pendingForms
+        ];
+
+        return view('admin/verify_forms', $data);
+    }
+
+    public function approve_signed_form($id)
+    {
+        if (session()->get('role') !== 'admin') return redirect()->to('/dashboard');
+
+        $model = new \App\Models\LeaveRequestModel();
+        $model->update($id, [
+            'signed_form_status' => 'approved',
+            'signed_form_note' => 'Disetujui oleh Admin'
+        ]);
+
+        return redirect()->to('/admin/verify-forms')->with('success', 'Form berhasil disetujui. Penguncian cuti user ini telah dibuka.');
+    }
+
+    public function reject_signed_form($id)
+    {
+        if (session()->get('role') !== 'admin') return redirect()->to('/dashboard');
+
+        $model = new \App\Models\LeaveRequestModel();
+        
+        // Handle both POST and JSON
+        $inputNote = $this->request->getVar('note');
+        if (empty($inputNote)) {
+            $json = $this->request->getJSON();
+            $inputNote = $json->note ?? null;
+        }
+
+        $note = $inputNote ?: 'Ditolak oleh Admin. Silakan unggah ulang form yang benar.';
+        
+        $model->update($id, [
+            'signed_form_status' => 'rejected',
+            'signed_form_note' => $note
+        ]);
+
+        return redirect()->to('/admin/verify-forms')->with('success', 'Form ditolak.');
+    }
+
+    public function bypass_lock($id)
+    {
+        if (session()->get('role') !== 'admin') return redirect()->to('/dashboard');
+
+        $model = new \App\Models\LeaveRequestModel();
+        $model->update($id, [
+            'is_bypassed' => 1,
+            'signed_form_note' => 'Bypass manual oleh Admin'
+        ]);
+
+        return redirect()->to('/admin/verify-forms')->with('success', 'Penguncian cuti berhasil di-bypass secara manual.');
     }
 }

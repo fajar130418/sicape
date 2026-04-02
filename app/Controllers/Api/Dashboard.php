@@ -54,6 +54,60 @@ class Dashboard extends BaseController
         $builder->limit(5);
         $recentLeaves = $builder->get()->getResultArray();
 
+        // Calculate Pending Approvals Count
+        $pendingCount = 0;
+        
+        // 1. As Supervisor
+        $pendingCount += $db->table('leave_requests')
+            ->where('supervisor_id', $userId)
+            ->where('supervisor_status', 'pending')
+            ->countAllResults();
+
+        // 2. As Head of Agency
+        if ($user['is_head_of_agency']) {
+            $pendingCount += $db->table('leave_requests')
+                ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+                ->where('head_id', $userId)
+                ->where('head_status', 'pending')
+                ->groupStart()
+                    ->where('leave_types.name !=', 'Cuti Khusus')
+                    ->orWhere('leave_requests.supervisor_status', 'approved')
+                ->groupEnd()
+                ->countAllResults();
+        }
+
+        // 3. As Admin (Signed Form Verification)
+        if ($user['role'] == 'admin') {
+            $pendingCount += $db->table('leave_requests')
+                ->where('signed_form_status', 'pending_approval')
+                ->where('is_bypassed', 0)
+                ->countAllResults();
+        }
+
+        // 4. Staff KGB Alerts for Admins
+        $kgbAlerts = [];
+        if ($user['role'] == 'admin') {
+            $staff = $userModel
+                ->whereIn('user_type', ['PNS', 'PPPK'])
+                ->where('id !=', $userId) // Optional: exclude self if already shown in kgbInfo
+                ->findAll();
+            
+            $today = new \DateTime();
+            foreach ($staff as $emp) {
+                $empKgb = KgbController::calculateKgb($emp, $today);
+                if (in_array($empKgb['kgb_status'], [KgbController::STATUS_OVERDUE, KgbController::STATUS_WARNING])) {
+                    $kgbAlerts[] = [
+                        'user_id' => $emp['id'],
+                        'name' => $emp['name'],
+                        'nip' => $emp['nip'],
+                        'kgb_status' => $empKgb['kgb_status'],
+                        'kgb_next_date' => $empKgb['kgb_next_date'],
+                        'kgb_days_left' => $empKgb['kgb_days_left'],
+                    ];
+                }
+            }
+        }
+
         return $this->respond([
             'status' => 200,
             'data' => [
@@ -61,6 +115,8 @@ class Dashboard extends BaseController
                 'seniority' => $seniority,
                 'kgb_info' => $kgbInfo,
                 'recent_leaves' => $recentLeaves,
+                'pending_approvals_count' => $pendingCount,
+                'kgb_alerts' => $kgbAlerts, // New field for admins
                 'server_time' => date('Y-m-d H:i:s')
             ]
         ]);

@@ -71,20 +71,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        height: 70,
-                        errorBuilder: (c, e, s) => Icon(
-                          Icons.business_center_rounded,
-                          size: 70,
-                          color: Colors.indigo.shade700,
-                        ),
+                    Image.asset(
+                      'assets/logo_horizontal.png',
+                      height: 85,
+                      fit: BoxFit.contain,
+                      errorBuilder: (c, e, s) => Icon(
+                        Icons.business_center_rounded,
+                        size: 85,
+                        color: Colors.indigo.shade700,
                       ),
                     ),
                     const SizedBox(height: 24),

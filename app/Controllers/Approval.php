@@ -97,6 +97,32 @@ class Approval extends BaseController
 
         $model->update($id, $updateData);
 
+        // Send Push Notification
+        $userModel = new \App\Models\UserModel();
+        $requester = $userModel->find($request['user_id']);
+        if (!empty($requester['fcm_token'])) {
+            $statusText = $action == 'approved' ? 'Disetujui' : 'Ditolak';
+            $roleText = $isSupervisor ? 'Atasan' : 'Kepala Dinas';
+            $title = "Update Status Cuti (Web)";
+            $body = "Pengajuan cuti Anda telah $statusText oleh $roleText.";
+            if (!empty($note)) $body .= " Catatan: $note";
+            
+            \App\Helpers\FirebaseHelper::sendNotification($requester['fcm_token'], $title, $body, [
+                'type' => 'leave_status_update',
+                'id' => (string)$id
+            ]);
+        }
+
+        // Notify Head of Agency if Supervisor approves Cuti Khusus
+        if ($isSupervisor && $action === 'approved' && $isSpecialLeave) {
+            if (!empty($request['head_id'])) {
+                $head = $userModel->find($request['head_id']);
+                if (!empty($head['fcm_token'])) {
+                    \App\Helpers\FirebaseHelper::sendNotification($head['fcm_token'], "Persetujuan Cuti Khusus", "Ada Cuti Khusus dari " . $requester['name'] . " yang telah disetujui Atasan dan menunggu persetujuan akhir Anda.", ['type' => 'special_leave_approval']);
+                }
+            }
+        }
+
         return redirect()->to('/approval')->with('success', 'Status pengajuan berhasil diperbarui.');
     }
 }

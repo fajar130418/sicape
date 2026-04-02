@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,9 +27,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _unitController = TextEditingController();
   final TextEditingController _joinDateController = TextEditingController();
 
+  final TextEditingController _frontTitleController = TextEditingController();
+  final TextEditingController _backTitleController = TextEditingController();
+  final TextEditingController _nipController = TextEditingController();
+  final TextEditingController _nikController = TextEditingController();
+  final TextEditingController _contractEndDateController =
+      TextEditingController();
+
   String? _selectedUserType;
   String? _selectedRank;
   String? _selectedEducation;
+  String? _selectedGender;
+
+  static const _genders = [
+    {"value": "L", "label": "Laki-laki"},
+    {"value": "P", "label": "Perempuan"},
+  ];
 
   static const _educations = [
     "SD / Sederajat",
@@ -93,38 +107,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    final response = await _apiService.getProfile();
-    if (response['status'] == 200 && response['data'] != null) {
-      setState(() {
-        _userProfile = response['data'];
-        _nameController.text = _userProfile!['name'] ?? '';
-        _emailController.text = _userProfile!['email'] ?? '';
-        _phoneController.text = _userProfile!['phone'] ?? '';
-        _addressController.text = _userProfile!['address'] ?? '';
-        _pobController.text = _userProfile!['pob'] ?? '';
-        _dobController.text = _userProfile!['dob'] ?? '';
-        _positionController.text = _userProfile!['position'] ?? '';
-        _unitController.text = _userProfile!['unit'] ?? '';
-        _joinDateController.text = _userProfile!['join_date'] ?? '';
-        // Dropdown state vars
-        final edu = _userProfile!['education'];
-        _selectedEducation = _educations.contains(edu) ? edu : null;
-        final ut = _userProfile!['user_type'];
-        _selectedUserType = _userTypes.contains(ut) ? ut : null;
-        final rank = _userProfile!['rank'];
-        // Rank list may not be loaded yet; defer validation
-        _selectedRank = rank?.isNotEmpty == true ? rank : null;
-        _isLoading = false;
-      });
-    } else {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Gagal memuat profil: ${response['message']}')),
-        );
+    try {
+      final response = await _apiService.getProfile();
+      if (response['status'] == 200 && response['data'] != null) {
+        final data = response['data'];
+        setState(() {
+          _userProfile = data is Map<String, dynamic> ? data : null;
+          if (_userProfile != null) {
+            _nameController.text = _userProfile!['name']?.toString() ?? '';
+            _nipController.text = _userProfile!['nip']?.toString() ?? '';
+            _frontTitleController.text =
+                _userProfile!['front_title']?.toString() ?? '';
+            _backTitleController.text =
+                _userProfile!['back_title']?.toString() ?? '';
+            _nikController.text = _userProfile!['nik']?.toString() ?? '';
+            _emailController.text = _userProfile!['email']?.toString() ?? '';
+            _phoneController.text = _userProfile!['phone']?.toString() ?? '';
+            _addressController.text =
+                _userProfile!['address']?.toString() ?? '';
+            _pobController.text = _userProfile!['pob']?.toString() ?? '';
+            _dobController.text = _userProfile!['dob']?.toString() ?? '';
+            _positionController.text =
+                _userProfile!['position']?.toString() ?? '';
+            _unitController.text = _userProfile!['unit']?.toString() ?? '';
+            _joinDateController.text =
+                _userProfile!['join_date']?.toString() ?? '';
+            _contractEndDateController.text =
+                _userProfile!['contract_end_date']?.toString() ?? '';
+
+            // Dropdown state vars with safety
+            final edu = _userProfile!['education']?.toString();
+            _selectedEducation = _educations.contains(edu) ? edu : null;
+
+            final ut = _userProfile!['user_type']?.toString();
+            _selectedUserType = _userTypes.contains(ut) ? ut : null;
+
+            final rank = _userProfile!['rank']?.toString();
+            _selectedRank = (rank != null && rank.isNotEmpty) ? rank : null;
+
+            final g = _userProfile!['gender']?.toString();
+            _selectedGender = (g == 'L' || g == 'P') ? g : null;
+          }
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+        _showError('Gagal memuat profil: ${response['message'] ?? 'Error'}');
       }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      _showError('Terjadi kesalahan: $e');
     }
+  }
+
+  void _showError(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+    );
   }
 
   Future<void> _saveProfile() async {
@@ -134,6 +174,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     Map<String, dynamic> updateData = {
       'name': _nameController.text,
+      'front_title': _frontTitleController.text,
+      'back_title': _backTitleController.text,
+      'nik': _nikController.text,
+      'gender': _selectedGender ?? '',
       'email': _emailController.text,
       'phone': _phoneController.text,
       'address': _addressController.text,
@@ -144,6 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'rank': _selectedRank ?? '',
       'user_type': _selectedUserType ?? '',
       'education': _selectedEducation ?? '',
+      'contract_end_date': _contractEndDateController.text,
     };
 
     if (_passwordController.text.isNotEmpty) {
@@ -175,249 +220,458 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Profil Saya',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: Text('Profil Saya',
+            style:
+                GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.indigo.shade900,
-        elevation: 0.5,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(color: Colors.grey.shade200, height: 1),
+        ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.indigo.shade100,
-                            backgroundImage: _userProfile?['photo'] != null
-                                ? NetworkImage(ApiService.baseUrl.replaceAll(
-                                    '/api',
-                                    '/uploads/photos/${_userProfile!['photo']}'))
-                                : null,
-                            child: _userProfile?['photo'] == null
-                                ? Icon(Icons.person,
-                                    size: 50, color: Colors.indigo.shade400)
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.indigo.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.indigo.shade100),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.info_outline,
-                                  color: Colors.indigo.shade700, size: 20),
-                              const SizedBox(width: 8),
-                              Text('Informasi Jabatan (Hanya Admin)',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.indigo.shade900)),
-                            ],
-                          ),
-                          const Divider(height: 24),
-                          _buildReadOnlyField(
-                              'NIP', _userProfile?['nip'] ?? '-'),
-                          const SizedBox(height: 12),
-                          _buildReadOnlyField(
-                              'Hak Akses (Role)', _userProfile?['role'] ?? '-'),
-                          const SizedBox(height: 12),
-                          _buildReadOnlyField('Saldo Cuti N',
-                              '${_userProfile?['leave_balance_n'] ?? 0} Hari'),
-                          const SizedBox(height: 12),
-                          _buildReadOnlyField('Tanggal Masuk (TMT)',
-                              _userProfile?['join_date'] ?? '-'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    Text('Data Pribadi (Dapat Diubah)',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo.shade900)),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                        _nameController, 'Nama Lengkap', Icons.person_outline),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                        _emailController, 'Email', Icons.email_outlined),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                        _phoneController, 'Nomor HP', Icons.phone_outlined),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: _buildTextField(_pobController,
-                                'Tempat Lahir', Icons.location_city_outlined)),
-                        const SizedBox(width: 16),
-                        Expanded(
-                            child: _buildTextField(
-                                _dobController,
-                                'Tgl Lahir (YYYY-MM-DD)',
-                                Icons.calendar_today_outlined)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildTextField(_addressController, 'Alamat Lengkap',
-                        Icons.home_outlined,
-                        maxLines: 3),
-                    const SizedBox(height: 16),
-                    _buildDropdown(
-                      'Pendidikan Terakhir',
-                      Icons.school_outlined,
-                      _educations,
-                      _selectedEducation,
-                      (val) => setState(() => _selectedEducation = val),
-                    ),
-                    const SizedBox(height: 30),
-                    Text('Data Kepegawaian',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo.shade900)),
-                    const SizedBox(height: 16),
-                    _buildTextField(
-                        _positionController, 'Jabatan', Icons.work_outline),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                            child: _buildTextField(_unitController,
-                                'Unit Kerja', Icons.business_outlined)),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildDropdown(
-                            'Status Pegawai',
-                            Icons.badge_outlined,
-                            _userTypes,
-                            _selectedUserType,
-                            (val) => setState(() {
-                              _selectedUserType = val;
-                              // reset rank when type changes
-                              if (!_currentRanks.contains(_selectedRank)) {
-                                _selectedRank = null;
-                              }
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildDropdown(
-                      'Pangkat/Golongan',
-                      Icons.star_border,
-                      _currentRanks,
-                      _currentRanks.contains(_selectedRank)
-                          ? _selectedRank
-                          : null,
-                      (val) => setState(() => _selectedRank = val),
-                    ),
-                    const SizedBox(height: 30),
-                    Text('Keamanan',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.indigo.shade900)),
-                    const SizedBox(height: 16),
-                    _buildTextField(_passwordController,
-                        'Password Baru (Opsional)', Icons.lock_outline,
-                        isPassword: true),
-                    const SizedBox(height: 40),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : _saveProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo.shade600,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                          elevation: 2,
-                        ),
-                        child: _isSaving
-                            ? const CircularProgressIndicator(
-                                color: Colors.white)
-                            : const Text('SIMPAN PROFIL',
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2)),
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                  ],
+      body: RefreshIndicator(
+        onRefresh: _loadProfile,
+        color: Colors.indigo,
+        child: _isLoading && _userProfile == null
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_isLoading)
+                        const LinearProgressIndicator(minHeight: 2),
+                      // Header Card (Photo & NIP)
+                      _buildHeaderCard(),
+                      const SizedBox(height: 24),
+
+                      // Section: Informasi Jabatan
+                      _buildSectionHeader(
+                          'Informasi Jabatan',
+                          Icons.shield_rounded,
+                          'Hanya dapat diubah oleh Admin'),
+                      _buildInfoJabatanCard(),
+                      const SizedBox(height: 32),
+
+                      // Section: Data Pribadi
+                      _buildSectionHeader('Data Pribadi', Icons.person_rounded,
+                          'Dapat diubah oleh Anda'),
+                      _buildDataPribadiCard(),
+                      const SizedBox(height: 32),
+
+                      // Section: Data Kepegawaian
+                      _buildSectionHeader(
+                          'Data Kepegawaian', Icons.badge_rounded),
+                      _buildDataKepegawaianCard(),
+                      const SizedBox(height: 32),
+
+                      // Section: Kontak & Keamanan
+                      _buildSectionHeader(
+                          'Kontak & Keamanan', Icons.security_rounded),
+                      _buildKeamananCard(),
+
+                      const SizedBox(height: 48),
+                      _buildSaveButton(),
+                      const SizedBox(height: 60),
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
-  Widget _buildReadOnlyField(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: TextStyle(
+  Widget _buildSectionHeader(String title, IconData icon, [String? hint]) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: Colors.indigo.shade700),
+              const SizedBox(width: 8),
+              Text(
+                title.toUpperCase(),
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.indigo.shade900,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          if (hint != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              hint,
+              style: GoogleFonts.outfit(
                 fontSize: 12,
-                color: Colors.indigo.shade400,
-                fontWeight: FontWeight.w600)),
-        const SizedBox(height: 4),
-        Text(value,
-            style: TextStyle(
-                fontSize: 15,
-                color: Colors.indigo.shade900,
-                fontWeight: FontWeight.bold)),
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.indigo.shade500, width: 3),
+                ),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.indigo.shade50,
+                  backgroundImage: _userProfile?['photo'] != null
+                      ? NetworkImage(_userProfile!['photo'])
+                      : null,
+                  child: _userProfile?['photo'] == null
+                      ? Icon(Icons.person_rounded,
+                          size: 50, color: Colors.indigo.shade400)
+                      : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _userProfile?['name'] ?? 'User Name',
+            style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.indigo.shade900,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _userProfile?['nip'] ?? '-',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoJabatanCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9), // Slate 100
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        children: [
+          _buildReadOnlyRow(
+              'Hak Akses (Role)', _userProfile?['role']?.toUpperCase() ?? '-'),
+          const Divider(height: 24),
+          _buildReadOnlyRow('Saldo Cuti N (Tahun Ini)',
+              '${_userProfile?['leave_balance_n'] ?? 0} Hari',
+              isBadge: true),
+          const Divider(height: 24),
+          _buildReadOnlyRow(
+              'Tanggal Masuk (TMT)', _userProfile?['join_date'] ?? '-'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDataPribadiCard() {
+    return _buildFormCard([
+      _buildTextField(_nameController, 'Nama Lengkap', Icons.person_outline),
+      const SizedBox(height: 20),
+      Row(
+        children: [
+          Expanded(
+            child: _buildTextField(
+                _frontTitleController, 'Gelar Depan', Icons.title_rounded,
+                hint: 'Misal: Drs., Ir.'),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildTextField(
+                _backTitleController, 'Gelar Belakang', Icons.school_outlined,
+                hint: 'Misal: S.Kom'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 20),
+      _buildTextField(
+          _nikController, 'NIK (No. Induk Kependudukan)', Icons.badge_outlined,
+          keyboardType: TextInputType.number),
+      const SizedBox(height: 20),
+      _buildGenderDropdown(),
+      const SizedBox(height: 20),
+      Row(
+        children: [
+          Expanded(
+            child: _buildTextField(
+                _pobController, 'Tempat Lahir', Icons.location_city_outlined),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildTextField(
+                _dobController, 'Tgl Lahir', Icons.calendar_today_outlined,
+                hint: 'YYYY-MM-DD'),
+          ),
+        ],
+      ),
+      const SizedBox(height: 20),
+      _buildDropdown(
+        'Pendidikan Terakhir',
+        Icons.school_outlined,
+        _educations,
+        _selectedEducation,
+        (val) => setState(() => _selectedEducation = val),
+      ),
+      const SizedBox(height: 20),
+      _buildTextField(_addressController, 'Alamat Lengkap', Icons.home_outlined,
+          maxLines: 3),
+    ]);
+  }
+
+  Widget _buildDataKepegawaianCard() {
+    return _buildFormCard([
+      _buildTextField(_positionController, 'Jabatan', Icons.work_outline),
+      const SizedBox(height: 20),
+      _buildTextField(_unitController, 'Unit Kerja', Icons.business_outlined),
+      const SizedBox(height: 20),
+      _buildDropdown(
+        'Status Pegawai',
+        Icons.badge_outlined,
+        _userTypes,
+        _selectedUserType,
+        (val) => setState(() {
+          _selectedUserType = val;
+          if (!_currentRanks.contains(_selectedRank)) {
+            _selectedRank = null;
+          }
+        }),
+      ),
+      const SizedBox(height: 20),
+      _buildDropdown(
+        'Pangkat/Golongan',
+        Icons.military_tech_outlined,
+        _currentRanks,
+        _currentRanks.contains(_selectedRank) ? _selectedRank : null,
+        (val) => setState(() => _selectedRank = val),
+      ),
+      if (_selectedUserType?.contains('PPPK') ?? false) ...[
+        const SizedBox(height: 20),
+        _buildTextField(_contractEndDateController, 'Tgl Berakhir Kontrak',
+            Icons.event_busy_outlined,
+            hint: 'YYYY-MM-DD'),
+      ],
+    ]);
+  }
+
+  Widget _buildKeamananCard() {
+    return _buildFormCard([
+      _buildTextField(_phoneController, 'Nomor WhatsApp', Icons.phone_outlined),
+      const SizedBox(height: 20),
+      _buildTextField(_emailController, 'Email Aktif', Icons.email_outlined),
+      const SizedBox(height: 20),
+      _buildTextField(_passwordController, 'Password Baru (Opsional)',
+          Icons.lock_open_rounded,
+          isPassword: true, hint: 'Minimal 6 karakter'),
+    ]);
+  }
+
+  Widget _buildFormCard(List<Widget> children) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  Widget _buildReadOnlyRow(String label, String value, {bool isBadge = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 13,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        if (isBadge)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.indigo.shade600,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              value,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          )
+        else
+          Text(
+            value,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              color: Colors.indigo.shade900,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
       ],
     );
   }
 
+  Widget _buildGenderDropdown() {
+    return DropdownButtonFormField<String>(
+      initialValue: _selectedGender,
+      onChanged: (val) => setState(() => _selectedGender = val),
+      decoration: _getInputDecoration('Jenis Kelamin', Icons.wc_rounded),
+      items: _genders
+          .map((e) => DropdownMenuItem(
+                value: e['value'],
+                child:
+                    Text(e['label']!, style: GoogleFonts.outfit(fontSize: 15)),
+              ))
+          .toList(),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 60,
+      child: ElevatedButton(
+        onPressed: _isSaving ? null : _saveProfile,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.indigo.shade600,
+          foregroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          elevation: 4,
+          shadowColor: Colors.indigo.shade200,
+        ),
+        child: _isSaving
+            ? const CircularProgressIndicator(color: Colors.white)
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.save_rounded, size: 22),
+                  const SizedBox(width: 12),
+                  Text(
+                    'SIMPAN PERUBAHAN',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  InputDecoration _getInputDecoration(String label, IconData icon,
+      {String? hint}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon, color: Colors.indigo.shade400, size: 22),
+      labelStyle: GoogleFonts.outfit(color: Colors.grey.shade600, fontSize: 14),
+      hintStyle: GoogleFonts.outfit(color: Colors.grey.shade400, fontSize: 13),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.indigo.shade400, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.red.shade200),
+      ),
+    );
+  }
+
   Widget _buildTextField(
-      TextEditingController controller, String label, IconData icon,
-      {bool isPassword = false, int maxLines = 1}) {
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    bool isPassword = false,
+    int maxLines = 1,
+    String? hint,
+    TextInputType? keyboardType,
+  }) {
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
       maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Padding(
-          padding:
-              EdgeInsets.only(bottom: maxLines > 1 ? (maxLines * 10.0) : 0),
-          child: Icon(icon, color: Colors.indigo.shade400),
-        ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade200)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.indigo.shade400, width: 2)),
-      ),
+      keyboardType: keyboardType,
+      style: GoogleFonts.outfit(fontSize: 15),
+      decoration: _getInputDecoration(label, icon, hint: hint),
     );
   }
 
@@ -432,24 +686,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       initialValue: items.contains(value) ? value : null,
       onChanged: onChanged,
       isExpanded: true,
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: Colors.indigo.shade400),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.grey.shade200)),
-        focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.indigo.shade400, width: 2)),
-      ),
+      decoration: _getInputDecoration(label, icon),
       items: items
           .map((e) => DropdownMenuItem(
-              value: e, child: Text(e, overflow: TextOverflow.ellipsis)))
+                value: e,
+                child: Text(e,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(fontSize: 15)),
+              ))
           .toList(),
     );
   }

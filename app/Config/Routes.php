@@ -20,10 +20,17 @@ $routes->get('/leave/create', 'Leave::create', ['filter' => 'auth']);
 $routes->post('/leave/store', 'Leave::store', ['filter' => 'auth']);
 $routes->get('/leave/history', 'Leave::history', ['filter' => 'auth']);
 $routes->match(['get', 'post'], '/leave/print/(:num)', 'Leave::print/$1', ['filter' => 'auth']);
+$routes->post('/leave/upload-signed-form-web/(:num)', 'Leave::upload_signed_form_web/$1', ['filter' => 'auth']);
 $routes->get('/admin', 'Admin::index', ['filter' => 'auth']);
 $routes->get('/admin/process/(:num)/(:segment)', 'Admin::process/$1/$2', ['filter' => 'auth']);
 $routes->post('/admin/process/(:num)/(:segment)', 'Admin::process/$1/$2', ['filter' => 'auth']);
 $routes->get('/admin/recalculate-durations', 'Admin::recalculateDurations', ['filter' => 'auth']);
+
+// New Signature Form Verification (Web)
+$routes->get('/admin/verify-forms', 'Admin::verify_forms', ['filter' => 'auth']);
+$routes->post('/admin/approve-signed-form/(:num)', 'Admin::approve_signed_form/$1', ['filter' => 'auth']);
+$routes->post('/admin/reject-signed-form/(:num)', 'Admin::reject_signed_form/$1', ['filter' => 'auth']);
+$routes->post('/admin/bypass-lock/(:num)', 'Admin::bypass_lock/$1', ['filter' => 'auth']);
 
 // Employee Management Routes
 $routes->get('/employee', 'Employee::index', ['filter' => 'auth']);
@@ -75,8 +82,15 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
 
         // Leave
         $routes->get('leave/history', 'Leave::index');
+        $routes->post('leave/upload-signed-form/(:num)', 'Leave::upload_signed_form/$1');
+        $routes->get('leave/pending-uploads', 'Leave::pending_uploads');
+        $routes->post('leave/approve-signed-form/(:num)', 'Leave::approve_signed_form/$1');
+        $routes->post('leave/reject-signed-form/(:num)', 'Leave::reject_signed_form/$1');
+        $routes->post('leave/bypass-lock/(:num)', 'Leave::bypass_lock/$1');
+        $routes->get('leave', 'Leave::index');
         $routes->get('leave/types', 'Leave::types');
         $routes->post('leave/store', 'Leave::store');
+        $routes->get('leave/print/(:num)', 'Leave::print/$1');
 
         // Approval
         $routes->get('approval', 'Approval::index');
@@ -85,5 +99,6 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
         // Profile
         $routes->get('profile', 'Profile::index');
         $routes->post('profile/update', 'Profile::update');
+        $routes->post('users/fcm-token', 'Profile::updateFcmToken');
     });
 });

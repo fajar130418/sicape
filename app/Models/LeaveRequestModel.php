@@ -12,7 +12,7 @@ class LeaveRequestModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['user_id', 'leave_type_id', 'start_date', 'end_date', 'duration', 'reason', 'address_during_leave', 'attachment', 'status', 'admin_note', 'supervisor_id', 'supervisor_status', 'supervisor_note', 'head_id', 'head_status', 'head_note'];
+    protected $allowedFields    = ['user_id', 'leave_type_id', 'start_date', 'end_date', 'duration', 'reason', 'address_during_leave', 'attachment', 'signed_form', 'signed_form_status', 'signed_form_note', 'is_bypassed', 'status', 'admin_note', 'supervisor_id', 'supervisor_status', 'supervisor_note', 'head_id', 'head_status', 'head_note'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

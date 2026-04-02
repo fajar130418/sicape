@@ -676,8 +676,13 @@
             </li>
             <?php if (session()->get('role') == 'admin'): ?>
                 <li>
-                    <a href="<?= base_url('admin') ?>">
+                    <a href="<?= base_url('admin') ?>" class="<?= uri_string() == 'admin' ? 'active' : '' ?>">
                         <i class="fas fa-user-shield"></i> Admin Panel
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= base_url('admin/verify-forms') ?>" class="<?= uri_string() == 'admin/verify-forms' ? 'active' : '' ?>">
+                        <i class="fas fa-file-signature"></i> Verifikasi Form Cuti
                     </a>
                 </li>
                 <li>
@@ -740,6 +745,10 @@
                     <p><?= session()->get('role') == 'admin' ? 'Administrator' : 'Pegawai ASN' ?></p>
                 </div>
             </div>
+            <a href="<?= base_url('apk/app-release.apk') ?>" class="btn btn-sm"
+                style="width: 100%; justify-content: center; margin-bottom: 0.5rem; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);">
+                <i class="fab fa-android" style="margin-right: 8px; color: #10b981;"></i> Unduh Aplikasi Android
+            </a>
             <a href="<?= base_url('profile') ?>" class="btn btn-primary btn-sm"
                 style="width: 100%; justify-content: center; margin-bottom: 0.5rem; background: #eef2ff; color: var(--primary-color);">
                 <i class="fas fa-user-edit" style="margin-right: 8px;"></i> Profil Saya

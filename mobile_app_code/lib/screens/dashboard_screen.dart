@@ -57,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await _apiService.logout();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
@@ -72,7 +72,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     bool isSupervisor = _user?['role'] == 'supervisor' ||
         _user?['role'] == 'admin' ||
-        _user?['role'] == 'head';
+        _user?['role'] == 'head' ||
+        _user?['is_supervisor'] == true ||
+        _user?['is_head_of_agency'] == true;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -125,7 +127,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           selectedLabelStyle:
               GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
           unselectedLabelStyle:
-              GoogleFonts.outfit(fontWeight: FontWeight.medium, fontSize: 12),
+              GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 12),
           elevation: 0,
           items: [
             const BottomNavigationBarItem(
@@ -141,8 +143,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
               label: 'Riwayat',
             ),
             if (isSupervisor)
-              const BottomNavigationBarItem(
-                icon: Icon(Icons.verified_user_rounded),
+              BottomNavigationBarItem(
+                icon: Badge(
+                  label: Text(
+                    _dashboardData?['pending_approvals_count']?.toString() ??
+                        '0',
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                  isLabelVisible:
+                      (_dashboardData?['pending_approvals_count'] ?? 0) > 0,
+                  child: const Icon(Icons.verified_user_rounded),
+                ),
                 label: 'Persetujuan',
               ),
             const BottomNavigationBarItem(
@@ -219,11 +230,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 shape: BoxShape.circle,
                                 border:
                                     Border.all(color: Colors.white, width: 3),
-                                boxShadow: [
+                                boxShadow: const [
                                   BoxShadow(
                                     color: Colors.black26,
                                     blurRadius: 10,
-                                    offset: const Offset(0, 4),
+                                    offset: Offset(0, 4),
                                   ),
                                 ],
                               ),
@@ -297,6 +308,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             _dashboardData!['kgb_info']['kgb_status'] ==
                                 'overdue'))
                       _buildKgbWarning(),
+                    if (_user?['role'] == 'admin' &&
+                        _dashboardData?['kgb_alerts'] != null &&
+                        (_dashboardData!['kgb_alerts'] as List).isNotEmpty)
+                      _buildAdminKgbAlerts(),
                     Text(
                       'Info Pegawai & Cuti',
                       style: GoogleFonts.outfit(
@@ -306,7 +321,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildHorizontalInfoCards(),
+                    _buildVerticalInfoCards(),
                     const SizedBox(height: 32),
                     Text(
                       'Aktivitas Terakhir',
@@ -338,7 +353,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildHorizontalInfoCards() {
+  Widget _buildVerticalInfoCards() {
     final leaveBalance = _dashboardData?['leave_balance'];
     final seniority = _dashboardData?['seniority'];
     final kgbInfo = _dashboardData?['kgb_info'];
@@ -356,47 +371,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
             : 'Jatuh Tempo')
         : '-';
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: [
-          _buildInfoCard(
-            value: masaKerja,
-            label: 'Masa Kerja',
-            icon: Icons.work_history_rounded,
-            color: Colors.blue.shade600,
-          ),
-          _buildInfoCard(
-            value: kuotaCuti,
-            label: 'Kuota Cuti Tahunan',
-            icon: Icons.calendar_month_rounded,
-            color: Colors.green.shade600,
-          ),
-          _buildInfoCard(
-            value: cutiTerpakai,
-            label: 'Cuti Terpakai',
-            icon: Icons.calendar_today_rounded,
-            color: Colors.red.shade600,
-          ),
-          _buildInfoCard(
-            value: sisaCuti,
-            label: 'Sisa Cuti Tahunan',
-            subLabel:
-                'N: ${leaveBalance?['remaining']?['n'] ?? 0} | N-1: ${leaveBalance?['remaining']?['n1'] ?? 0} | N-2: ${leaveBalance?['remaining']?['n2'] ?? 0}',
-            icon: Icons.hourglass_bottom_rounded,
-            color: Colors.orange.shade600,
-          ),
-          _buildInfoCard(
-            value: kgbValue,
-            label: 'Sisa Waktu KGB',
-            subLabel:
-                '(Kenaikan Gaji Berkala)\nTgl: ${kgbInfo?['kgb_next_date'] ?? "-"}',
-            icon: Icons.access_time_rounded,
-            color: Colors.purple.shade600,
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        _buildInfoCard(
+          value: masaKerja,
+          label: 'Masa Kerja',
+          icon: Icons.work_history_rounded,
+          color: Colors.blue.shade600,
+        ),
+        _buildInfoCard(
+          value: kuotaCuti,
+          label: 'Kuota Cuti Tahunan',
+          icon: Icons.calendar_month_rounded,
+          color: Colors.green.shade600,
+        ),
+        _buildInfoCard(
+          value: cutiTerpakai,
+          label: 'Cuti Terpakai',
+          icon: Icons.calendar_today_rounded,
+          color: Colors.red.shade600,
+        ),
+        _buildInfoCard(
+          value: sisaCuti,
+          label: 'Sisa Cuti Tahunan',
+          subLabel:
+              'N: ${leaveBalance?['remaining']?['n'] ?? 0} | N-1: ${leaveBalance?['remaining']?['n1'] ?? 0} | N-2: ${leaveBalance?['remaining']?['n2'] ?? 0}',
+          icon: Icons.hourglass_bottom_rounded,
+          color: Colors.orange.shade600,
+        ),
+        _buildInfoCard(
+          value: kgbValue,
+          label: 'Sisa Waktu KGB',
+          subLabel:
+              '(Kenaikan Gaji Berkala)\nTgl: ${kgbInfo?['kgb_next_date'] ?? "-"}',
+          icon: Icons.access_time_rounded,
+          color: Colors.purple.shade600,
+        ),
+      ],
     );
   }
 
@@ -408,8 +419,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String? subLabel,
   }) {
     return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 16, bottom: 8),
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -535,6 +546,101 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   'Kenaikan Gaji Berkala (KGB) Anda hampir tercapai. Silakan segera lapor kepada Admin.',
                   style: GoogleFonts.outfit(
                       color: Colors.orange.shade800, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminKgbAlerts() {
+    final alerts = _dashboardData?['kgb_alerts'] as List<dynamic>? ?? [];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'Peringatan KGB Pegawai',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade900,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${alerts.length}',
+                  style: TextStyle(
+                      color: Colors.red.shade900,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...alerts.map((alert) => _buildAdminKgbAlertCard(alert)).toList(),
+          const Divider(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminKgbAlertCard(dynamic alert) {
+    final bool isOverdue = alert['kgb_status'] == 'overdue';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isOverdue ? Colors.red.shade50 : Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isOverdue ? Colors.red.shade200 : Colors.orange.shade200,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: isOverdue ? Colors.red.shade100 : Colors.orange.shade100,
+            child: Icon(
+              isOverdue ? Icons.priority_high_rounded : Icons.notification_important_rounded,
+              color: isOverdue ? Colors.red.shade900 : Colors.orange.shade900,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  alert['name'] ?? 'N/A',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: isOverdue ? Colors.red.shade900 : Colors.orange.shade900,
+                  ),
+                ),
+                Text(
+                  isOverdue 
+                    ? 'Sudah Jatuh Tempo (${alert['kgb_next_date']})'
+                    : 'Akan Datang: ${alert['kgb_days_left']} Hari Lagi',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: isOverdue ? Colors.red.shade700 : Colors.orange.shade700,
+                  ),
                 ),
               ],
             ),

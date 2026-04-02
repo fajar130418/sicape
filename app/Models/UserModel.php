@@ -48,7 +48,8 @@ class UserModel extends Model
         'mkg_additional_months',
         'mkg_adjustment_years',
         'mkg_adjustment_months',
-        'last_kgb_date'
+        'last_kgb_date',
+        'fcm_token'
     ];
 
     protected bool $allowEmptyInserts = false;
@@ -89,7 +90,11 @@ class UserModel extends Model
 
         $user = $this->find($userId);
         if (!$user)
-            return ['n' => 0, 'n1' => 0, 'n2' => 0, 'total' => 0];
+            return [
+                'initial' => ['n' => 0, 'n1' => 0, 'n2' => 0, 'total' => 0],
+                'used' => 0,
+                'remaining' => ['n' => 0, 'n1' => 0, 'n2' => 0, 'total' => 0]
+            ];
 
         // 1. Get Initial Balances (Option 2)
         $initialN = (int) ($user['leave_balance_n'] ?? 12);

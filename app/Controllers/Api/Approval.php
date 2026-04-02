@@ -24,29 +24,23 @@ class Approval extends BaseController
         $supervisorApprovals = $model->select('leave_requests.*, users.name as user_name, users.nip, leave_types.name as leave_type_name')
             ->join('users', 'users.id = leave_requests.user_id')
             ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
-            ->where('supervisor_id', $userId)
-            ->where('supervisor_status', 'pending')
-            ->orderBy('created_at', 'ASC')
+            ->where('leave_requests.supervisor_id', $userId)
+            ->where('leave_requests.supervisor_status', 'pending')
+            ->orderBy('leave_requests.created_at', 'ASC')
             ->findAll();
 
         // Pending Approvals (Head of Agency)
-        $headApprovals = [];
-        $userModel = new UserModel();
-        $user = $userModel->find($userId);
-
-        if ($user['is_head_of_agency']) {
-            $headApprovals = $model->select('leave_requests.*, users.name as user_name, users.nip, leave_types.name as leave_type_name')
-                ->join('users', 'users.id = leave_requests.user_id')
-                ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
-                ->where('head_id', $userId)
-                ->where('head_status', 'pending')
-                ->groupStart()
-                ->where('leave_types.name !=', 'Cuti Khusus')
-                ->orWhere('supervisor_status', 'approved')
-                ->groupEnd()
-                ->orderBy('created_at', 'ASC')
-                ->findAll();
-        }
+        $headApprovals = $model->select('leave_requests.*, users.name as user_name, users.nip, leave_types.name as leave_type_name')
+            ->join('users', 'users.id = leave_requests.user_id')
+            ->join('leave_types', 'leave_types.id = leave_requests.leave_type_id')
+            ->where('leave_requests.head_id', $userId)
+            ->where('leave_requests.head_status', 'pending')
+            ->groupStart()
+            ->where('leave_types.name !=', 'Cuti Khusus')
+            ->orWhere('leave_requests.supervisor_status', 'approved')
+            ->groupEnd()
+            ->orderBy('leave_requests.created_at', 'ASC')
+            ->findAll();
 
         return $this->respond([
             'status' => 200,
@@ -67,6 +61,10 @@ class Approval extends BaseController
         $action = $json->action ?? null; // 'approved' or 'rejected'
         $role = $json->role ?? null;     // 'supervisor' or 'head'
         $note = $json->note ?? '';
+
+        // Backward compatibility mapping
+        if ($action === 'approve') $action = 'approved';
+        if ($action === 'reject') $action = 'rejected';
 
         if (!in_array($action, ['approved', 'rejected'])) {
             return $this->fail('Invalid action. Use "approved" or "rejected".', 400);
@@ -139,6 +137,33 @@ class Approval extends BaseController
 
         try {
             $model->update($id, $data);
+
+            // Notify the user who requested the leave
+            $userModel = new UserModel();
+            $requester = $userModel->find($leaveRequest['user_id']);
+            
+            if (!empty($requester['fcm_token'])) {
+                $statusText = $action == 'approved' ? 'Disetujui' : 'Ditolak';
+                $roleText = $role == 'supervisor' ? 'Atasan' : 'Kepala Dinas';
+                
+                $title = "Update Status Cuti";
+                $body = "Pengajuan cuti Anda telah $statusText oleh $roleText.";
+                if (!empty($note)) {
+                    $body .= " Catatan: $note";
+                }
+                
+                \App\Helpers\FirebaseHelper::sendNotification($requester['fcm_token'], $title, $body, ['type' => 'leave_status_update', 'id' => $id]);
+            }
+            
+            // If Supervisor just approved Cuti Khusus, notify the Head of Agency
+            if ($action === 'approved' && $role === 'supervisor' && $isSpecialLeave) {
+                 if (!empty($leaveRequest['head_id'])) {
+                     $head = $userModel->find($leaveRequest['head_id']);
+                     if (!empty($head['fcm_token'])) {
+                         \App\Helpers\FirebaseHelper::sendNotification($head['fcm_token'], "Persetujuan Cuti Khusus", "Ada Cuti Khusus dari " . $requester['name'] . " yang telah disetujui Atasan dan menunggu persetujuan akhir Anda.", ['type' => 'special_leave_approval']);
+                     }
+                 }
+            }
 
             return $this->respond([
                 'status' => 200,

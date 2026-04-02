@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1088800547129",
+    "project_id": "sicape-seruyan",
+    "storage_bucket": "sicape-seruyan.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1088800547129:android:cb2fd05ba0aa32cbee48e8",
+        "android_client_info": {
+          "package_name": "com.example.sicape_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBfJvqcihpmio38IaIF_y8UIAGahJAM8pc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

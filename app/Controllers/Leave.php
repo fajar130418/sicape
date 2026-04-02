@@ -296,7 +296,7 @@ class Leave extends BaseController
         }
 
         // 4. File Requirement & CAP Specific Logic
-        if ($leaveType['name'] == 'Cuti Alasan Penting') {
+        if ($leaveType['name'] == 'Cuti Alasan Penting' || $leaveType['name'] == 'Cuti Karena Alasan Penting') {
             $capCategory = $request->getVar('reason');
             $requiresAttachment = in_array($capCategory, [
                 'Keluarga Inti Sakit Keras',
@@ -347,6 +347,18 @@ class Leave extends BaseController
         ];
 
         $model->save($data);
+
+        // Send Push Notification
+        $title = "Pengajuan Cuti Baru (Web)";
+        $body = "Ada pengajuan cuti baru dari " . $targetUser['name'] . " menunggu persetujuan Anda.";
+        
+        if (!empty($supervisorId)) {
+            $supervisor = $userModel->find($supervisorId);
+            if (!empty($supervisor['fcm_token'])) {
+                \App\Helpers\FirebaseHelper::sendNotification($supervisor['fcm_token'], $title, $body, ['type' => 'new_leave_request']);
+            }
+        }
+
         return redirect()->to('/dashboard')->with('success', 'Pengajuan cuti berhasil dikirim.');
     }
 
@@ -450,18 +462,51 @@ class Leave extends BaseController
             'tenure' => $tenure,
             'headOfAgency' => $headOfAgency,
             'manualSignature' => $manualSignature,
-            'remainingN' => $detailedRemaining['n'],
-            'remainingN1' => $detailedRemaining['n1'],
-            'remainingN2' => $detailedRemaining['n2'],
+            'remainingN' => $detailedRemaining['remaining']['n'],
+            'remainingN1' => $detailedRemaining['remaining']['n1'],
+            'remainingN2' => $detailedRemaining['remaining']['n2'],
             'currentYear' => date('Y')
         ];
 
-        $dompdf = new \Dompdf\Dompdf();
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new \Dompdf\Dompdf($options);
         $html = view('leave/print', $data);
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
         // F4 size in points: 8.5inch x 13inch = 612pt x 936pt
         $dompdf->setPaper([0, 0, 612.00, 936.00], 'portrait');
         $dompdf->render();
-        $dompdf->stream("Formulir_Cuti_" . $request['nip'] . ".pdf", ["Attachment" => true]);
+
+        $filename = 'Formulir_Cuti_' . $id . '.pdf';
+        $dompdf->stream($filename, ['Attachment' => true]);
+        exit;
+    }
+
+    public function upload_signed_form_web($id)
+    {
+        $userId = session()->get('id');
+        $model = new \App\Models\LeaveRequestModel();
+        $request = $model->find($id);
+
+        if (!$request || $request['user_id'] != $userId) {
+            return redirect()->back()->with('error', 'Akses ditolak.');
+        }
+
+        $file = $this->request->getFile('signed_form');
+
+        if ($file->isValid() && !$file->hasMoved()) {
+            $newName = $file->getRandomName();
+            $file->move(ROOTPATH . 'public/uploads', $newName);
+
+            $model->update($id, [
+                'signed_form' => $newName,
+                'signed_form_status' => 'pending_approval',
+                'signed_form_note' => 'Menunggu verifikasi Admin'
+            ]);
+
+            return redirect()->back()->with('success', 'Form berhasil diunggah. Silakan tunggu verifikasi dari Admin.');
+        }
+
+        return redirect()->back()->with('error', 'Gagal mengunggah file.');
     }
 }

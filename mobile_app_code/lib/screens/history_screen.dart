@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -31,6 +32,39 @@ class _HistoryScreenState extends State<HistoryScreen> {
     } catch (e) {
       print(e);
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickAndUpload(int id) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+      );
+
+      if (result != null) {
+        String? filePath = result.files.single.path;
+        if (filePath != null) {
+          setState(() => _isLoading = true);
+          final response = await _apiService.uploadSignedForm(id, filePath);
+          
+          if (response['status'] == 200) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Form tanda tangan berhasil diunggah')),
+            );
+            _loadHistory();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(response['message'] ?? 'Gagal mengunggah form')),
+            );
+            setState(() => _isLoading = false);
+          }
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
     }
   }
 
@@ -75,9 +109,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildHistoryCard(dynamic item) {
+    final bool isApprovedByAdmin = item['status'].toString().toLowerCase() == 'approved';
+    
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
+      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: Colors.grey.shade200, width: 1),
@@ -141,14 +178,136 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ],
             const Divider(height: 24),
-            Text(
-              'Diajukan pada: ${item['created_at'] != null ? DateFormat('dd MMM yyyy HH:mm').format(DateTime.parse(item['created_at'])) : '-'}',
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Diajukan: ${item['created_at'] != null ? DateFormat('dd MMM yyyy').format(DateTime.parse(item['created_at'])) : '-'}',
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 10),
+                  ),
+                ),
+                if (isApprovedByAdmin)
+                  _buildSignedFormSection(item),
+              ],
             ),
+            if (isApprovedByAdmin) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final token = await _apiService.getToken();
+                    final url = Uri.parse(
+                        '${ApiService.baseUrl}/leave/print/${item['id']}?token=$token');
+                    _apiService.launchURL(url.toString());
+                  },
+                  icon: const Icon(Icons.picture_as_pdf_rounded, size: 14),
+                  label: const Text('Cetak & Tanda Tangan', style: TextStyle(fontSize: 12)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo.shade600,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildSignedFormSection(dynamic item) {
+    final status = item['signed_form_status'] ?? 'pending_upload';
+    final isBypassed = (item['is_bypassed'] ?? 0).toString() == '1';
+
+    if (isBypassed) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.verified_user_rounded, color: Colors.blue.shade600, size: 14),
+          const SizedBox(width: 4),
+          Text('Bypassed', style: TextStyle(color: Colors.blue.shade700, fontSize: 10, fontWeight: FontWeight.bold)),
+        ],
+      );
+    }
+
+    if (status == 'pending_upload') {
+      return TextButton.icon(
+        onPressed: () => _pickAndUpload(int.parse(item['id'].toString())),
+        icon: const Icon(Icons.upload_file_rounded, size: 14),
+        label: const Text('Unggah Form', style: TextStyle(fontSize: 11)),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.orange.shade800,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          minimumSize: const Size(0, 32),
+        ),
+      );
+    } else if (status == 'pending_approval') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.blue.shade100)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.blue.shade700))),
+            const SizedBox(width: 6),
+            Text('Verifikasi', style: TextStyle(color: Colors.blue.shade700, fontSize: 10, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      );
+    } else if (status == 'rejected') {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red.shade700, size: 14),
+              const SizedBox(width: 4),
+              Text('Ditolak!', style: TextStyle(color: Colors.red.shade700, fontSize: 10, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          if (item['signed_form_note'] != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                item['signed_form_note'] ?? 'Ditolak Admin. Silakan unggah ulang form yang benar.',
+                style: TextStyle(color: Colors.red.shade900, fontSize: 9, fontStyle: FontStyle.italic),
+                textAlign: TextAlign.right,
+              ),
+            ),
+          const SizedBox(height: 8),
+          ElevatedButton.icon(
+            onPressed: () => _pickAndUpload(int.parse(item['id'].toString())),
+            icon: const Icon(Icons.refresh_rounded, size: 12),
+            label: const Text('Unggah Ulang', style: TextStyle(fontSize: 10)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade50,
+              foregroundColor: Colors.red.shade700,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: Colors.red.shade200)),
+            ),
+          ),
+        ],
+      );
+    } else if (status == 'approved') {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.verified_rounded, color: Colors.green, size: 14),
+          const SizedBox(width: 4),
+          Text('Terverifikasi', style: TextStyle(color: Colors.green.shade700, fontSize: 10, fontWeight: FontWeight.bold)),
+        ],
+      );
+    }
+    
+    return const SizedBox.shrink();
   }
 
   Widget _buildStatusBadge(String status) {

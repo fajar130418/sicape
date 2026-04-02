@@ -27,9 +27,9 @@
                     <th>Tanggal Pengajuan</th>
                     <th>Periode Cuti</th>
                     <th>Durasi</th>
-                    <th>Lampiran</th>
-                    <th>Status Atasan</th>
-                    <th>Catatan</th>
+                    <th>Lampiran Pendukung</th>
+                    <th>Status Persetujuan</th>
+                    <th>Form Tanda Tangan</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -49,11 +49,7 @@
                                 <?= date('d M Y', strtotime($row['end_date'])) ?>
                             </td>
                             <td>
-                                <?php 
-                                    $start = new DateTime($row['start_date']);
-                                    $end = new DateTime($row['end_date']);
-                                    echo $start->diff($end)->days + 1 . ' Hari'; 
-                                ?>
+                                <?= $row['duration'] ?> Hari
                             </td>
                             <td>
                                 <?php if ($row['attachment']): ?>
@@ -72,23 +68,55 @@
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <!-- Check status OR if user contains is_head_of_agency flag -->
+                                <?php if ($row['status'] == 'approved'): ?>
+                                    <?php 
+                                        $sf_status = $row['signed_form_status'] ?? 'pending_upload';
+                                        $isBypassed = ($row['is_bypassed'] ?? 0) == 1;
+                                    ?>
+                                    
+                                    <?php if ($isBypassed): ?>
+                                        <span class="badge badge-success" style="background: #e0f2fe; color: #0369a1;">Bypassed</span>
+                                    <?php elseif ($sf_status == 'pending_upload'): ?>
+                                        <button onclick="openUploadModal(<?= $row['id'] ?>)" class="btn btn-sm btn-warning" style="background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa;">
+                                            <i class="fas fa-upload"></i> Unggah
+                                        </button>
+                                    <?php elseif ($sf_status == 'pending_approval'): ?>
+                                        <span class="badge badge-warning" style="background: #fef9c3; color: #854d0e;">Verifikasi</span>
+                                    <?php elseif ($sf_status == 'approved'): ?>
+                                        <span class="badge badge-success">Terverifikasi</span>
+                                    <?php elseif ($sf_status == 'rejected'): ?>
+                                        <div style="display: flex; flex-direction: column; gap: 4px; border: 1px solid #fee2e2; padding: 6px; border-radius: 8px; background: #fffafb;">
+                                            <span class="badge badge-danger">Ditolak</span>
+                                                <div style="font-size: 0.7rem; color: #991b1b; line-height: 1.2;">
+                                                    <strong>Ket:</strong> <?= $row['signed_form_note'] ?: 'Ditolak Admin. Silakan unggah ulang form yang benar.' ?>
+                                                </div>
+                                            <button onclick="openUploadModal(<?= $row['id'] ?>)" class="btn btn-sm btn-danger" style="font-size: 0.7rem; padding: 4px; width: 100%; margin-top: 4px;">
+                                                <i class="fas fa-redo"></i> Unggah Ulang
+                                            </button>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span style="color: #9ca3af;">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
                                 <?php 
                                     $isHead = isset($row['is_head_of_agency']) && $row['is_head_of_agency'] == 1;
-                                    // Also check if status is NOT rejected (unless approved)
                                     $canPrintHead = $isHead && $row['status'] != 'rejected';
                                 ?>
 
                                 <?php if ($row['status'] == 'approved' || $canPrintHead): ?>
-                                    <?php if ($canPrintHead): ?>
-                                        <button onclick="openSignatureModal('<?= base_url('leave/print/' . $row['id']) ?>')" class="btn btn-sm btn-primary" style="background-color: #ef4444; border-color: #ef4444;">
-                                            <i class="fas fa-file-pdf"></i> PDF
-                                        </button>
-                                    <?php else: ?>
-                                        <a href="<?= base_url('leave/print/' . $row['id']) ?>" class="btn btn-sm btn-primary" target="_blank" style="background-color: #ef4444; border-color: #ef4444;">
-                                            <i class="fas fa-file-pdf"></i> PDF
-                                        </a>
-                                    <?php endif; ?>
+                                    <div style="display: flex; gap: 4px;">
+                                        <?php if ($canPrintHead): ?>
+                                            <button onclick="openSignatureModal('<?= base_url('leave/print/' . $row['id']) ?>')" class="btn btn-sm btn-primary" style="background-color: #ef4444; border-color: #ef4444;">
+                                                <i class="fas fa-file-pdf"></i> PDF
+                                            </button>
+                                        <?php else: ?>
+                                            <a href="<?= base_url('leave/print/' . $row['id']) ?>" class="btn btn-sm btn-primary" target="_blank" style="background-color: #ef4444; border-color: #ef4444;">
+                                                <i class="fas fa-file-pdf"></i> PDF
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 <?php else: ?>
                                     <span style="color: #9ca3af;">-</span>
                                 <?php endif; ?>
@@ -100,30 +128,27 @@
         </table>
     </div>
 </div>
-<!-- Signature Modal -->
-<div id="signatureModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 8px; width: 400px; max-width: 90%;">
-        <h3 style="margin-top: 0; margin-bottom: 1rem;">Data Penanda Tangan</h3>
-        <p style="margin-bottom: 1rem; color: #666; font-size: 0.9rem;">Khusus untuk Kepala Dinas, silakan isi pejabat yang menandatangani (Misal: Bupati / Sekda).</p>
+</div>
+
+<!-- Upload Form Modal -->
+<div id="uploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 12px; width: 450px; max-width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-weight: 700;">Unggah Form Tanda Tangan</h3>
+        <p style="margin-bottom: 1.5rem; color: #64748b; font-size: 0.9rem;">Silakan unggah pindai/foto formulir cuti yang telah ditandatangani oleh atasan dalam format PDF atau Gambar (JPG/PNG).</p>
         
-        <form id="signatureForm" action="" method="post" target="_blank">
+        <form id="uploadForm" action="" method="post" enctype="multipart/form-data">
             <?= csrf_field() ?>
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; margin-bottom: 0.5rem;">Nama Pejabat</label>
-                <input type="text" name="sign_name" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; margin-bottom: 0.5rem;">NIP (Opsional)</label>
-                <input type="text" name="sign_nip" style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; margin-bottom: 0.5rem;">Jabatan (Cth: Bupati Seruyan)</label>
-                <input type="text" name="sign_position" required style="width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;">
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label">Pilih Berkas</label>
+                <input type="file" name="signed_form" class="form-control" accept=".pdf,image/*" required>
+                <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.5rem;">Ukuran maksimal: 2MB</p>
             </div>
             
-            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-                <button type="button" onclick="closeModal()" style="padding: 0.5rem 1rem; background: #ccc; border: none; border-radius: 4px; cursor: pointer;">Batal</button>
-                <button type="submit" style="padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">Cetak PDF</button>
+            <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" onclick="closeUploadModal()" class="btn" style="background: #f1f5f9; color: #475569;">Batal</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-cloud-upload-alt" style="margin-right: 8px;"></i> Unggah Sekarang
+                </button>
             </div>
         </form>
     </div>
@@ -139,6 +164,15 @@
         document.getElementById('signatureModal').style.display = 'none';
     }
 
+    function openUploadModal(id) {
+        document.getElementById('uploadForm').action = '<?= base_url('leave/upload-signed-form-web/') ?>/' + id;
+        document.getElementById('uploadModal').style.display = 'flex';
+    }
+
+    function closeUploadModal() {
+        document.getElementById('uploadModal').style.display = 'none';
+    }
+
     // Handle form submit
     document.getElementById('signatureForm').onsubmit = function() {
         setTimeout(function() {
@@ -149,10 +183,10 @@
 
     // Close on click outside
     window.onclick = function(event) {
-        var modal = document.getElementById('signatureModal');
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
+        var modal1 = document.getElementById('signatureModal');
+        var modal2 = document.getElementById('uploadModal');
+        if (event.target == modal1) modal1.style.display = "none";
+        if (event.target == modal2) modal2.style.display = "none";
     }
 </script>
 <?= $this->endSection() ?>

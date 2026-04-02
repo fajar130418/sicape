@@ -6,35 +6,51 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: ">=2.17.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   
   # Networking
-  http: ^1.0.0
+  http: ^1.2.1
   
   # Local Storage
-  shared_preferences: ^2.0.15
+  shared_preferences: ^2.2.3
   
   # Date Formatting
-  intl: ^0.17.0
+  intl: ^0.18.1
   
   # Icons
-  cupertino_icons: ^1.0.2
+  cupertino_icons: ^1.0.6
 
   # Typography
-  google_fonts: ^6.1.0
+  google_fonts: ^6.2.1
+
+  # File Picker
+  file_picker: ^8.0.0
+  firebase_core: ^4.5.0
+  firebase_messaging: ^16.1.2
+  flutter_local_notifications: ^20.1.0
+  url_launcher: ^6.2.5
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   
   flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo.png"
+  min_sdk_android: 21 # android min sdk value
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/logo.png
+    - assets/logo_horizontal.png
